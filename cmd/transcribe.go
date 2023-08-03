@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"fmt"
+	"path"
 	"podcribe/manager"
 	"podcribe/services/convertor"
 	"podcribe/services/crawler"
 	"podcribe/services/downloader"
 	"podcribe/services/translator"
 	"podcribe/services/whisper"
+	"podcribe/tools"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -33,5 +37,27 @@ func transcribe(link string) {
 		translator.New(),
 		manager.FullFlow,
 	)
-	manager.Start(link)
+
+	isOnWeb := strings.HasPrefix(link, "http://") || strings.HasPrefix(link, "https://")
+	if isOnWeb {
+		fmt.Println("started downloading:", link)
+		translation, err := manager.FullFlow(link)
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		filepath, err := tools.WriteTranslation("tempfilename", translation)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println("Podcast translation successfully generated in: ", filepath)
+	} else {
+		ext := path.Ext(link)
+		if ext == ".wav" {
+			manager.TranslateDownloadedWAV(link)
+		} else if ext == ".mp3" {
+			manager.TranslateDownloadedMP3(link)
+		}
+	}
 }

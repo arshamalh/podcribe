@@ -22,9 +22,12 @@ Possible combinations:
 
 12345 => full flow
 
+34 => User have a MP3 file to transcribe (and 5 translate)
+
+4 => User have a WAV file to transcribe (and 5 translate)
 
 ## How to use
-```
+```bash
 podcribe transcribe go-time-330.mp3 # => automatically transcribes and and translates
 podcribe transcribe https://podcast.google.com/... # => automatically downloads and transcribes and and translates
 podcribe start --telegram-enabled true --telegram-token hgkhkgkk --ui-enabled true
