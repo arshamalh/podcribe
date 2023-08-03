@@ -1,6 +1,10 @@
 package convertor
 
 import (
+	"errors"
+	"path"
+	"strings"
+
 	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
@@ -20,8 +24,11 @@ func New() *convertor {
 // Default command is:
 // ffmpeg -i input.mp3 -ar 16000 -ac 1 -c:a pcm_s16le output.wav
 func (c convertor) Convert(file2convert string) (string, error) {
-	converted_file_path := "./files/go-time-277.wav"
-	if err := ffmpeg.Input("./files/go-time-277.mp3").Output(converted_file_path,
+	converted_file_path, err := convertedFilePath(file2convert)
+	if err != nil {
+		return "", err
+	}
+	if err := ffmpeg.Input(file2convert).Output(converted_file_path,
 		ffmpeg.KwArgs{
 			"c:a": "pcm_s16le",
 			"ar":  16000,
@@ -30,4 +37,17 @@ func (c convertor) Convert(file2convert string) (string, error) {
 		return "", err
 	}
 	return converted_file_path, nil
+}
+
+func convertedFilePath(file2convert string) (string, error) {
+	_, file := path.Split(file2convert)
+	if strings.HasSuffix(file, ".wav") {
+		return path.Join("files", file), nil
+	}
+
+	extLessName, found := strings.CutSuffix(file, ".mp3")
+	if !found {
+		return "", errors.New("entered file extension is not valid for conversion, use a .mp3 or .wav file")
+	}
+	return path.Join("files", extLessName+".wav"), nil
 }

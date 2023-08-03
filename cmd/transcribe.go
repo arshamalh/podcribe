@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"podcribe/manager"
 	"podcribe/services/convertor"
@@ -11,6 +12,7 @@ import (
 	"podcribe/services/whisper"
 	"podcribe/tools"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -35,7 +37,6 @@ func transcribe(link string) {
 		convertor.New(),
 		whisper.New(),
 		translator.New(),
-		manager.FullFlow,
 	)
 
 	isOnWeb := strings.HasPrefix(link, "http://") || strings.HasPrefix(link, "https://")
@@ -53,11 +54,24 @@ func transcribe(link string) {
 		}
 		fmt.Println("Podcast translation successfully generated in: ", filepath)
 	} else {
+		info, err := os.Stat(link) // TODO: Can we use file info to improve UX?
+		if err != nil {
+			if os.IsNotExist(err) {
+				fmt.Println("file does not exist")
+				return
+			} else {
+				fmt.Println("unexpected error in detecting file location")
+				return
+			}
+		}
 		ext := path.Ext(link)
+		fmt.Printf("File detected!\nName: %s\nSize: %d Bytes\nLast Modified: %s\n*****\n\n", info.Name(), info.Size(), info.ModTime().Format(time.RFC822))
 		if ext == ".wav" {
 			manager.TranslateDownloadedWAV(link)
 		} else if ext == ".mp3" {
 			manager.TranslateDownloadedMP3(link)
+		} else {
+			fmt.Println("file format is not supported")
 		}
 	}
 }

@@ -21,7 +21,7 @@ type Manager struct {
 	translator  translator.I
 }
 
-func New(crawler crawler.I, downloader downloader.I, convertor convertor.I, transcriber whisper.I, translator translator.I, flowType FlowType) *Manager {
+func New(crawler crawler.I, downloader downloader.I, convertor convertor.I, transcriber whisper.I, translator translator.I) *Manager {
 	return &Manager{
 		crawler, downloader, convertor, transcriber, translator,
 	}
