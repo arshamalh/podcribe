@@ -8,8 +8,8 @@ import (
 	"podcribe/services/convertor"
 	"podcribe/services/crawler"
 	"podcribe/services/downloader"
+	"podcribe/services/transcriber"
 	"podcribe/services/translator"
-	"podcribe/services/whisper"
 	"podcribe/tools"
 	"strings"
 	"time"
@@ -35,7 +35,7 @@ func transcribe(link string) {
 		crawler.New(),
 		downloader.New(),
 		convertor.New(),
-		whisper.New(),
+		transcriber.New(),
 		translator.New(),
 	)
 

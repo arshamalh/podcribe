@@ -34,6 +34,10 @@ podcribe start --telegram-enabled true --telegram-token hgkhkgkk --ui-enabled tr
 ```
 Automatically detect whether to download a file or directly transcribe a file in a provided path
 
-
+```
+LIBRARY_PATH=whisper C_INCLUDE_PATH=whisper go run main.go transcribe "files/01 Into You.wav"
+```
 <!-- TODO: podcribe model command -->
 
+resources: read about go bindings
+https://github.com/ggerganov/whisper.cpp/tree/master/bindings/go

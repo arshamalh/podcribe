@@ -4,8 +4,8 @@ import (
 	"podcribe/services/convertor"
 	"podcribe/services/crawler"
 	"podcribe/services/downloader"
+	"podcribe/services/transcriber"
 	"podcribe/services/translator"
-	"podcribe/services/whisper"
 )
 
 // We may want to just download the podcast using the bot (no translating, convertion)
@@ -17,11 +17,11 @@ type Manager struct {
 	crawler     crawler.I
 	downloader  downloader.I
 	convertor   convertor.I
-	transcriber whisper.I
+	transcriber transcriber.I
 	translator  translator.I
 }
 
-func New(crawler crawler.I, downloader downloader.I, convertor convertor.I, transcriber whisper.I, translator translator.I) *Manager {
+func New(crawler crawler.I, downloader downloader.I, convertor convertor.I, transcriber transcriber.I, translator translator.I) *Manager {
 	return &Manager{
 		crawler, downloader, convertor, transcriber, translator,
 	}
