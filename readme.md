@@ -41,3 +41,18 @@ LIBRARY_PATH=whisper C_INCLUDE_PATH=whisper go run main.go transcribe "files/01 
 
 resources: read about go bindings
 https://github.com/ggerganov/whisper.cpp/tree/master/bindings/go
+
+
+# HOW to run
+For local usage, it's better to use Dockerfile.local and download preferred whisper model separately and put it on `aimodels` directory, the difference is in the speed of your build process (although docker cache the downloaded model, but don't relay on that)
+
+For downloading whisper models locally, follow this commands:
+```
+git clone https://github.com/ggerganov/whisper.cpp
+cd whisper.cpp
+make base.en
+```
+The model will be generated as `ggml-base.en.bin` inside `whisper.cpp/models`, move it to `aimodels`
+
+For running docker with another manifest:
+docker build -t podcribe-test:0.0.9 -f Dockerfile.local .

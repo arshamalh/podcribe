@@ -1,6 +1,10 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"time"
+
+	"github.com/spf13/cobra"
+)
 
 func registerStartCmd(root *cobra.Command) {
 	cmd := &cobra.Command{
@@ -15,5 +19,7 @@ func registerStartCmd(root *cobra.Command) {
 }
 
 func start() {
-
+	for {
+		time.Sleep(time.Hour)
+	}
 }

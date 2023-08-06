@@ -6,19 +6,12 @@ import (
 	"strings"
 	"time"
 
-	// Packages
 	whisper "github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 )
-
-///////////////////////////////////////////////////////////////////////////////
-// TYPES
 
 type Flags struct {
 	*flag.FlagSet
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// LIFECYCLE
 
 func NewFlags(name string, args []string) (*Flags, error) {
 	flags := &Flags{
@@ -26,7 +19,19 @@ func NewFlags(name string, args []string) (*Flags, error) {
 	}
 
 	// Register the command line arguments
-	registerFlags(flags)
+	flag.String("model", "", "Path to the model file")
+	flag.String("language", "", "Spoken language")
+	flag.Bool("translate", false, "Translate from source language to english")
+	flag.Duration("offset", 0, "Time offset")
+	flag.Duration("duration", 0, "Duration of audio to process")
+	flag.Uint("threads", 0, "Number of threads to use")
+	flag.Bool("speedup", false, "Enable speedup")
+	flag.Uint("max-len", 0, "Maximum segment length in characters")
+	flag.Uint("max-tokens", 0, "Maximum tokens per segment")
+	flag.Float64("word-thold", 0, "Maximum segment score")
+	flag.Bool("tokens", false, "Display tokens")
+	flag.Bool("colorize", false, "Colorize tokens")
+	flag.String("out", "", "Output format (srt, none or leave as empty string)")
 
 	// Parse command line
 	if err := flags.Parse(args); err != nil {
@@ -36,9 +41,6 @@ func NewFlags(name string, args []string) (*Flags, error) {
 	// Return success
 	return flags, nil
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// PUBLIC METHODS
 
 func (flags *Flags) GetModel() string {
 	return flags.Lookup("model").Value.String()
@@ -132,25 +134,5 @@ func (flags *Flags) SetParams(context whisper.Context) error {
 		context.SetTokenThreshold(word_threshold)
 	}
 
-	// Return success
 	return nil
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// PRIVATE METHODS
-
-func registerFlags(flag *Flags) {
-	flag.String("model", "", "Path to the model file")
-	flag.String("language", "", "Spoken language")
-	flag.Bool("translate", false, "Translate from source language to english")
-	flag.Duration("offset", 0, "Time offset")
-	flag.Duration("duration", 0, "Duration of audio to process")
-	flag.Uint("threads", 0, "Number of threads to use")
-	flag.Bool("speedup", false, "Enable speedup")
-	flag.Uint("max-len", 0, "Maximum segment length in characters")
-	flag.Uint("max-tokens", 0, "Maximum tokens per segment")
-	flag.Float64("word-thold", 0, "Maximum segment score")
-	flag.Bool("tokens", false, "Display tokens")
-	flag.Bool("colorize", false, "Colorize tokens")
-	flag.String("out", "", "Output format (srt, none or leave as empty string)")
 }
