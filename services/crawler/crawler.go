@@ -39,7 +39,8 @@ func getGooglePodcastLinks(page_link string) (podcast_link []string, err error) 
 		parts := strings.Split(jsdata, ";")
 		if len(parts) == 3 {
 			link := parts[1]
-			if strings.HasSuffix(link, ".mp3") {
+			if strings.Contains(link, "cdn.changelog.com/uploads/") && strings.HasSuffix(link, ".mp3") {
+				link = strings.TrimPrefix(link, "https://op3.dev/e/")
 				podcast_link = append(podcast_link, link)
 			}
 		}
