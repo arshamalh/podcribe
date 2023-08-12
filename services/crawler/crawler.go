@@ -36,13 +36,10 @@ func getGooglePodcastLinks(page_link string) (podcast_link []string, err error) 
 
 	cl.OnHTML(`div[jsname="fvi9Ef"][jsdata]`, func(e *colly.HTMLElement) {
 		jsdata := e.Attr("jsdata")
-		parts := strings.Split(jsdata, ";")
-		if len(parts) == 3 {
-			link := parts[1]
-			if strings.Contains(link, "cdn.changelog.com/uploads/") && strings.HasSuffix(link, ".mp3") {
-				link = strings.TrimPrefix(link, "https://op3.dev/e/")
-				podcast_link = append(podcast_link, link)
-			}
+		httpIndex := strings.LastIndex(jsdata, "https")
+		mp3Index := strings.Index(jsdata, ".mp3")
+		if mp3Index > httpIndex {
+			podcast_link = append(podcast_link, jsdata[httpIndex:mp3Index+4])
 		}
 	})
 
