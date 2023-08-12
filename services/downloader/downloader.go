@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 )
 
 // TODO: Show the downloading progress in Telegram, UI, CLI or whatever is using this application
+
 type I interface {
 	// Downloads a file, store it in the file system and returns the path to the file,
 	// or raise an error if it can't download the file or can't store it.
@@ -20,26 +22,26 @@ type I interface {
 }
 
 type Downloader struct {
-	concurrency int
-	chunks      map[int][]byte
-	*sync.Mutex
+	workersCount int
+	chunks       map[int][]byte
+	mx           sync.Mutex
 }
 
 func New() *Downloader {
-	return &Downloader{}
+	return &Downloader{
+		workersCount: 3,
+		chunks:       make(map[int][]byte),
+	}
 }
 
 func (d Downloader) Download(uri string) (filePath string, err error) {
-	d.concurrency = 3
-	d.Mutex = &sync.Mutex{}
-	d.chunks = make(map[int][]byte)
-
+	fmt.Println("uri	", uri)
 	isSupported, contentLength, err := getRangeDetails(uri)
 	if err != nil {
 		return "", err
 	}
 
-	if !isSupported || d.concurrency <= 1 {
+	if !isSupported || d.workersCount <= 1 {
 		return d.processSingle(uri)
 	}
 
@@ -59,9 +61,8 @@ func (d Downloader) processSingle(uri string) (filePath string, err error) {
 }
 
 func (d Downloader) processMultiple(contentLength int, uri string) (filePath string, err error) {
-	split := contentLength / d.concurrency
-
-	wg := &sync.WaitGroup{}
+	split := contentLength / d.workersCount
+	var wg sync.WaitGroup
 	index := 0
 
 	for i := 0; i < contentLength; i += split + 1 {
@@ -70,10 +71,9 @@ func (d Downloader) processMultiple(contentLength int, uri string) (filePath str
 			j = contentLength
 		}
 
-		//Initialize for each index or application will panic
 		d.chunks[index] = make([]byte, 0)
 		wg.Add(1)
-		go d.downloadFileForRange(wg, uri, strconv.Itoa(i)+"-"+strconv.Itoa(j), index)
+		go d.downloadFileForRange(&wg, uri, strconv.Itoa(i)+"-"+strconv.Itoa(j), index)
 		index++
 	}
 
@@ -86,10 +86,8 @@ func (d Downloader) processMultiple(contentLength int, uri string) (filePath str
 	return d.combineChunks(uri)
 }
 
-func (d Downloader) downloadFileForRange(wg *sync.WaitGroup, uri, r string, index int) {
-	if wg != nil {
-		defer wg.Done()
-	}
+func (d *Downloader) downloadFileForRange(wg *sync.WaitGroup, uri, r string, index int) {
+	defer wg.Done()
 
 	request, err := http.NewRequest("GET", uri, strings.NewReader(""))
 	if err != nil {
@@ -105,16 +103,14 @@ func (d Downloader) downloadFileForRange(wg *sync.WaitGroup, uri, r string, inde
 		return
 	}
 
-	//206 = Partial Content
 	if sc != 200 && sc != 206 {
-		d.Lock()
-		d.Unlock()
+		err = fmt.Errorf("invalid status code: %d", sc)
 		return
 	}
 
-	d.Lock()
+	d.mx.Lock()
 	d.chunks[index] = append(d.chunks[index], data...)
-	d.Unlock()
+	d.mx.Unlock()
 }
 
 func (d Downloader) combineChunks(uri string) (filePath string, err error) {
@@ -122,7 +118,7 @@ func (d Downloader) combineChunks(uri string) (filePath string, err error) {
 	if err != nil {
 		return "", err
 	}
-	filePath = currDir + "/" + filepath.Base(uri)
+	filePath = path.Join(currDir, "/", filepath.Base(uri))
 
 	out, err := os.Create(filePath)
 	defer out.Close()
@@ -132,7 +128,6 @@ func (d Downloader) combineChunks(uri string) (filePath string, err error) {
 	}
 
 	buf := bytes.NewBuffer(nil)
-	//Not using for range because it does not gurantee ordered iteration
 	for i := 0; i < len(d.chunks); i++ {
 		buf.Write(d.chunks[i])
 	}
@@ -168,7 +163,6 @@ func getRangeDetails(uri string) (bool, int, error) {
 		return false, 0, err
 	}
 
-	//Accept-Ranges: bytes
 	if headers.Get("Accept-Ranges") == "bytes" {
 		return true, cl, nil
 	}
@@ -176,7 +170,7 @@ func getRangeDetails(uri string) (bool, int, error) {
 	return false, cl, nil
 }
 
-func doAPICall(request *http.Request) (int, http.Header, []byte, error) {
+func doAPICall(request *http.Request) (statusCode int, header http.Header, data []byte, err error) {
 	client := http.Client{
 		Timeout: 0,
 	}
@@ -187,7 +181,7 @@ func doAPICall(request *http.Request) (int, http.Header, []byte, error) {
 	}
 	defer response.Body.Close()
 
-	data, err := io.ReadAll(response.Body)
+	data, err = io.ReadAll(response.Body)
 	if err != nil {
 		return 0, http.Header{}, []byte{}, err
 	}
