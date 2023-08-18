@@ -3,9 +3,9 @@ package crawler
 import (
 	"errors"
 	"podcribe/entities"
-	"strings"
-
 	"github.com/gocolly/colly/v2"
+	"podcribe/repo"
+	"strings"
 )
 
 type I interface {
@@ -15,10 +15,11 @@ type I interface {
 }
 
 type crawler struct {
+	db repo.DB
 }
 
-func New() *crawler {
-	return &crawler{}
+func New(db repo.DB) *crawler {
+	return &crawler{db}
 }
 
 // Get a page link as an input and search in the page for a podcast link,

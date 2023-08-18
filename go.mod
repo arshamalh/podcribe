@@ -6,6 +6,7 @@ require (
 	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20230803082407-b94836195673
 	github.com/go-audio/wav v1.1.0
 	github.com/gocolly/colly/v2 v2.1.0
+	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/spf13/cobra v1.7.0
 	github.com/u2takey/ffmpeg-go v0.4.1
 )
@@ -31,8 +32,9 @@ require (
 	github.com/go-audio/audio v1.0.0 // indirect
 	github.com/go-audio/riff v1.0.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
-	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/kennygrant/sanitize v1.2.4 // indirect
@@ -45,7 +47,7 @@ require (
 	go.uber.org/zap v1.25.0
 	golang.org/x/net v0.12.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	google.golang.org/appengine v1.6.6 // indirect
-	google.golang.org/protobuf v1.24.0 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
