@@ -33,7 +33,7 @@ func registerTranscribeCmd(root *cobra.Command) {
 func transcribe(link string) {
 	manager := manager.New(
 		crawler.New(),
-		downloader.New(),
+		downloader.New(3),
 		convertor.New(),
 		transcriber.New(),
 		translator.New(),

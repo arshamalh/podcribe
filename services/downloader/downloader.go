@@ -9,7 +9,6 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -21,20 +20,19 @@ type I interface {
 	Download(url string) (filePath string, err error)
 }
 
-type Downloader struct {
-	workersCount int
-	chunks       map[int][]byte
-	mx           sync.Mutex
+type downloader struct {
+	workersCount int // TODO Calculate workers count dynamically and combine its logic with process single
+	chunks       [][]byte
 }
 
-func New() *Downloader {
-	return &Downloader{
-		workersCount: 3,
-		chunks:       make(map[int][]byte),
+func New(workers_count int) *downloader {
+	return &downloader{
+		workersCount: workers_count,
+		chunks:       make([][]byte, workers_count),
 	}
 }
 
-func (d Downloader) Download(uri string) (filePath string, err error) {
+func (d *downloader) Download(uri string) (filePath string, err error) {
 	fmt.Println("uri	", uri)
 	isSupported, contentLength, err := getRangeDetails(uri)
 	if err != nil {
@@ -45,10 +43,16 @@ func (d Downloader) Download(uri string) (filePath string, err error) {
 		return d.processSingle(uri)
 	}
 
-	return d.processMultiple(contentLength, uri)
+	filePath, err = d.processMultiple(contentLength, uri)
+	if err != nil {
+		return "", nil
+	}
+
+	fmt.Printf("Wrote to File : %v, len : %v\n", filePath, contentLength)
+	return filePath, nil
 }
 
-func (d Downloader) processSingle(uri string) (filePath string, err error) {
+func (d *downloader) processSingle(uri string) (filePath string, err error) {
 	//Initialize first index with []byte
 	d.chunks[0] = make([]byte, 0)
 	d.downloadFileForRange(nil, uri, "", 0)
@@ -60,20 +64,18 @@ func (d Downloader) processSingle(uri string) (filePath string, err error) {
 	return d.combineChunks(uri)
 }
 
-func (d Downloader) processMultiple(contentLength int, uri string) (filePath string, err error) {
-	split := contentLength / d.workersCount
+func (d *downloader) processMultiple(contentLength int, uri string) (filePath string, err error) {
+	partLength := contentLength / d.workersCount
 	var wg sync.WaitGroup
-	index := 0
+	wg.Add(d.workersCount)
 
-	for i := 0; i < contentLength; i += split + 1 {
-		j := i + split
-		if j > contentLength {
-			j = contentLength
+	for startRange, index := 0, 0; startRange < contentLength; startRange += partLength + 1 {
+		endRange := startRange + partLength
+		if endRange > contentLength {
+			endRange = contentLength
 		}
-
-		d.chunks[index] = make([]byte, 0)
-		wg.Add(1)
-		go d.downloadFileForRange(&wg, uri, strconv.Itoa(i)+"-"+strconv.Itoa(j), index)
+		_range := fmt.Sprintf("%d-%d", startRange, endRange)
+		go d.downloadFileForRange(&wg, uri, _range, index)
 		index++
 	}
 
@@ -86,16 +88,16 @@ func (d Downloader) processMultiple(contentLength int, uri string) (filePath str
 	return d.combineChunks(uri)
 }
 
-func (d *Downloader) downloadFileForRange(wg *sync.WaitGroup, uri, r string, index int) {
+func (d *downloader) downloadFileForRange(wg *sync.WaitGroup, uri, _range string, index int) {
 	defer wg.Done()
 
-	request, err := http.NewRequest("GET", uri, strings.NewReader(""))
+	request, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
 		return
 	}
 
-	if r != "" {
-		request.Header.Add("Range", "bytes="+r)
+	if _range != "" {
+		request.Header.Add("Range", "bytes="+_range)
 	}
 
 	sc, _, data, err := doAPICall(request)
@@ -104,52 +106,50 @@ func (d *Downloader) downloadFileForRange(wg *sync.WaitGroup, uri, r string, ind
 	}
 
 	if sc != 200 && sc != 206 {
-		err = fmt.Errorf("invalid status code: %d", sc)
+		// err = fmt.Errorf("invalid status code: %d", sc)
 		return
 	}
 
-	d.mx.Lock()
+	d.chunks[index] = make([]byte, 0)
 	d.chunks[index] = append(d.chunks[index], data...)
-	d.mx.Unlock()
 }
 
-func (d Downloader) combineChunks(uri string) (filePath string, err error) {
+func (d *downloader) combineChunks(uri string) (filePath string, err error) {
 	currDir, err := os.Getwd()
 	if err != nil {
 		return "", err
 	}
 	filePath = path.Join(currDir, "/", filepath.Base(uri))
 
-	out, err := os.Create(filePath)
-	defer out.Close()
-
+	output, err := os.Create(filePath)
 	if err != nil {
 		return "", err
 	}
+	defer output.Close()
 
 	buf := bytes.NewBuffer(nil)
 	for i := 0; i < len(d.chunks); i++ {
-		buf.Write(d.chunks[i])
+		if _, err := buf.Write(d.chunks[i]); err != nil {
+			return "", err
+		}
 	}
 
-	l, err := buf.WriteTo(out)
-	if err != nil {
+	if _, err = buf.WriteTo(output); err != nil {
 		return "", err
 	}
-
-	fmt.Println("Wrote to File : %v, len : %v", filePath, l)
 
 	return filePath, nil
 }
 
 func getRangeDetails(uri string) (bool, int, error) {
-	request, err := http.NewRequest("HEAD", uri, strings.NewReader(""))
+	request, err := http.NewRequest("HEAD", uri, nil)
 	if err != nil {
 		return false, 0, err
 	}
 
 	sc, headers, _, err := doAPICall(request)
 	if err != nil {
+		// If resets by peer, we should tell user that we don't support downloading this podcast
 		return false, 0, err
 	}
 
@@ -157,33 +157,28 @@ func getRangeDetails(uri string) (bool, int, error) {
 		return false, 0, err
 	}
 
-	conLen := headers.Get("Content-Length")
-	cl, err := strconv.Atoi(conLen)
+	contentLength, err := strconv.Atoi(headers.Get("Content-Length"))
 	if err != nil {
 		return false, 0, err
 	}
 
 	if headers.Get("Accept-Ranges") == "bytes" {
-		return true, cl, nil
+		return true, contentLength, nil
 	}
 
-	return false, cl, nil
+	return false, contentLength, nil
 }
 
 func doAPICall(request *http.Request) (statusCode int, header http.Header, data []byte, err error) {
-	client := http.Client{
-		Timeout: 0,
-	}
-
-	response, err := client.Do(request)
+	response, err := http.DefaultClient.Do(request)
 	if err != nil {
-		return 0, http.Header{}, []byte{}, err
+		return 0, nil, nil, err
 	}
 	defer response.Body.Close()
 
 	data, err = io.ReadAll(response.Body)
 	if err != nil {
-		return 0, http.Header{}, []byte{}, err
+		return 0, nil, nil, err
 	}
 
 	return response.StatusCode, response.Header, data, nil
