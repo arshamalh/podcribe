@@ -24,6 +24,7 @@ func New(db repo.DB) *crawler {
 
 // Get a page link as an input and search in the page for a podcast link,
 // returns podcast link if any or raise an error if there is no link or the page is not accessible.
+
 func (c crawler) Find(podcast *entities.Podcast) error {
 	page_link := podcast.PageLink
 	if strings.Contains(page_link, "google") {
