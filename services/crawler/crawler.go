@@ -1,6 +1,7 @@
 package crawler
 
 import (
+	"errors"
 	"github.com/gocolly/colly/v2"
 	"strings"
 )
@@ -27,6 +28,7 @@ func (c crawler) Find(page_link string) (podcast_link string, err error) {
 		if err != nil {
 			return "", err
 		}
+		return podcastLinks[0], nil
 	}
 
 	if strings.Contains(page_link, "castbox") {
@@ -34,9 +36,10 @@ func (c crawler) Find(page_link string) (podcast_link string, err error) {
 		if err != nil {
 			return "", err
 		}
+		return podcastLinks[0], nil
 	}
 
-	return podcastLinks[0], nil
+	return "nil", errors.New("unknown provider")
 }
 
 // Find google podcast .mp3 link
