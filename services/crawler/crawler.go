@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+const GOOGLE = "google"
+const CASTBOX = "castbox"
+
 type I interface {
 	// Get a page link as an input and search in the page for a podcast link,
 	// returns podcast link if any or raise an error if there is no link or the page is not accessible.
@@ -27,25 +30,44 @@ func New(db repo.DB) *crawler {
 
 func (c crawler) Find(podcast *entities.Podcast) error {
 	page_link := podcast.PageLink
-	if strings.Contains(page_link, "google") {
-		podcastLinks, err := getGooglePodcastLinks(page_link)
-		if err != nil {
-			return err
-		}
-		podcast.Mp3Link = podcastLinks[0]
-		return nil
+	podcastLink, provider, err := getPodcastLink(page_link)
+	if err != nil {
+		return err
 	}
 
-	if strings.Contains(page_link, "castbox") {
-		podcastLinks, err := getCastboxPodcastLinks(page_link)
-		if err != nil {
-			return err
-		}
-		podcast.Mp3Link = podcastLinks[0]
-		return nil
+	//TODO: add provider and ToModel() method 
+	podcast.Mp3Link = podcastLink
+	podcastModel := repo.Podcast{
+		PageLink:    page_link,
+		PodcastLink: podcastLink,
+		Provider:    provider,
 	}
 
-	return errors.New("unknown provider")
+	podcast.Mp3Link = podcastLink
+ 
+	return c.db.StorePodcast(podcastModel)
+}
+
+// Find podcast link
+func getPodcastLink(page_link string) (podcastLink string, provider string, err error) {
+	var podcastLinks []string
+	if strings.Contains(page_link, GOOGLE) {
+		podcastLinks, err = getGooglePodcastLinks(page_link)
+		if err != nil {
+			return "", "", err
+		}
+		return podcastLinks[0], GOOGLE, nil
+	}
+
+	if strings.Contains(page_link, CASTBOX) {
+		podcastLinks, err = getCastboxPodcastLinks(page_link)
+		if err != nil {
+			return "", "", err
+		}
+		return podcastLinks[0], CASTBOX, nil
+	}
+
+	return "", "", errors.New("unknown provider")
 }
 
 // Find google podcast .mp3 link
