@@ -20,8 +20,6 @@ func New() (*sqlite, error) {
 		return nil, err
 	}
 
-	defer db.Close()
-
 	err = db.Ping()
 	if err != nil {
 		return nil, err
@@ -41,8 +39,8 @@ func New() (*sqlite, error) {
 func createTables(db *sql.DB) (err error) {
 	sts := `
 				CREATE TABLE IF NOT EXISTS podcast(id INTEGER PRIMARY KEY, page_link varchar, podcast_link varchar, provider varchar, path varchar, referenced_count varchar, created_at timestamp);
-				CREATE TABLE user(id INTEGER PRIMARY KEY, created_at timestamp);
-				CREATE TABLE user_podcast(id INTEGER PRIMARY KEY, user_id int, podcast_id int);
+				CREATE TABLE IF NOT EXISTS user(id INTEGER PRIMARY KEY, created_at timestamp);
+				CREATE TABLE IF NOT EXISTS user_podcast(id INTEGER PRIMARY KEY, user_id int, podcast_id int);
 			`
 	_, err = db.Exec(sts)
 	if err != nil {
