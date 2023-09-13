@@ -12,10 +12,6 @@ All the steps:
 
 Possible combinations:
 
-345 => User have a MP3 file to transcribe
-
-45 => User have a WAV file to transcribe
-
 12 => User have a link to just download (no transcription, conversion or translation needed)
 
 1234 => User want's downloading and transcribing but don't want translations
@@ -43,7 +39,7 @@ resources: read about go bindings
 https://github.com/ggerganov/whisper.cpp/tree/master/bindings/go
 
 
-# HOW to run
+# How to run
 For local usage, it's better to use Dockerfile.local and download preferred whisper model separately and put it on `aimodels` directory, the difference is in the speed of your build process (although docker cache the downloaded model, but don't relay on that)
 
 For downloading whisper models locally, follow this commands:

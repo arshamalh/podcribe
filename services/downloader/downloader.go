@@ -25,6 +25,7 @@ type I interface {
 type downloader struct {
 	workersCount int // TODO Calculate workers count dynamically and combine its logic with process single
 	chunks       []bytes.Buffer
+	progressChan chan int
 	// IMPORTANT
 	// If multiple users use the same manager
 	// If each user have a manager but each user can download multiple files at the same time
@@ -36,6 +37,7 @@ func New(workers_count int) *downloader {
 	return &downloader{
 		workersCount: workers_count,
 		chunks:       make([]bytes.Buffer, workers_count),
+		progressChan: make(chan int),
 	}
 }
 
@@ -62,6 +64,10 @@ func (d *downloader) Download(uri string) (filePath string, err error) {
 
 	fmt.Printf("Wrote to File : %v, len : %v\n", filePath, contentLength)
 	return filePath, nil
+}
+
+func (d *downloader) ConsumeProgress() <-chan int {
+	return d.progressChan
 }
 
 func (d *downloader) processSingle(uri string) (filePath string, err error) {
@@ -158,7 +164,7 @@ func (d *downloader) progress(ctx context.Context, totalLen int) {
 			if totalDownloaded > 100 {
 				totalDownloaded = 100
 			}
-			fmt.Println(totalDownloaded) // TODO: Don't print here, it's useless, return to a channel and write a consumer for it in other places such as UI or Telegram
+			d.progressChan <- totalDownloaded
 		}
 		time.Sleep(time.Millisecond * 500)
 	}

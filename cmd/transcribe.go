@@ -42,7 +42,7 @@ func transcribe(link string) {
 	isOnWeb := strings.HasPrefix(link, "http://") || strings.HasPrefix(link, "https://")
 	if isOnWeb {
 		fmt.Println("started downloading:", link)
-		translation, err := manager.FullFlow(link)
+		translation, transcription, podcast_path, err := manager.FullFlow(link)
 
 		if err != nil {
 			fmt.Println(err)
@@ -52,7 +52,8 @@ func transcribe(link string) {
 		if err != nil {
 			fmt.Println(err)
 		}
-		fmt.Println("Podcast translation successfully generated in: ", filepath)
+		// TODO: make it a more clear message
+		fmt.Println("Podcast translation successfully generated in: ", filepath, translation, transcription, podcast_path)
 	} else {
 		info, err := os.Stat(link) // TODO: Can we use file info to improve UX?
 		if err != nil {

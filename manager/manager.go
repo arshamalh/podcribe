@@ -27,7 +27,9 @@ func New(crawler crawler.I, downloader downloader.I, convertor convertor.I, tran
 	}
 }
 
-func (m Manager) JustDownload(link string) (string, error) {
+// the only difference is filtered providers
+// TODO: Should we include a direct download for this function?
+func (m Manager) JustDownload(link string) (filepath string, err error) {
 	podcast_link, err := m.crawler.Find(link)
 	if err != nil {
 		return "", err
@@ -37,47 +39,51 @@ func (m Manager) JustDownload(link string) (string, error) {
 
 // Start a full or partial flow of steps the bot is cable of
 // it may just find and download the file and return the path or go down till translation
-func (m Manager) FullFlow(link string) (string, error) {
+func (m Manager) FullFlow(link string) (translation string, transcription string, podcast_path string, err error) {
 	podcast_link, err := m.crawler.Find(link)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 
 	filepath, err := m.downloader.Download(podcast_link)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 
-	podcast_path, err := m.convertor.Convert(filepath)
+	podcast_path, err = m.convertor.Convert(filepath)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 
-	podcast_text, err := m.transcriber.Transcribe(podcast_path)
+	transcription, err = m.transcriber.Transcribe(podcast_path)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 
-	return m.translator.Translate(podcast_text)
+	translation, err = m.translator.Translate(transcription)
+
+	return translation, transcription, podcast_path, err
 }
 
-func (m Manager) FullExceptTranslation(link string) (string, error) {
+func (m Manager) FullExceptTranslation(link string) (transcription string, filepath string, err error) {
 	podcast_link, err := m.crawler.Find(link)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	filepath, err := m.downloader.Download(podcast_link)
+	filepath, err = m.downloader.Download(podcast_link)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	podcast_path, err := m.convertor.Convert(filepath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return m.transcriber.Transcribe(podcast_path)
+	transcription, err = m.transcriber.Transcribe(podcast_path)
+
+	return transcription, filepath, err
 }
 
 func (m Manager) TranscribeDownloadedMP3(path string) (string, error) {
