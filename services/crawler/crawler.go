@@ -2,14 +2,16 @@ package crawler
 
 import (
 	"errors"
-	"github.com/gocolly/colly/v2"
+	"podcribe/entities"
 	"strings"
+
+	"github.com/gocolly/colly/v2"
 )
 
 type I interface {
 	// Get a page link as an input and search in the page for a podcast link,
 	// returns podcast link if any or raise an error if there is no link or the page is not accessible.
-	Find(page_link string) (podcast_link string, err error)
+	Find(podcast *entities.Podcast) error
 }
 
 type crawler struct {
@@ -21,25 +23,27 @@ func New() *crawler {
 
 // Get a page link as an input and search in the page for a podcast link,
 // returns podcast link if any or raise an error if there is no link or the page is not accessible.
-func (c crawler) Find(page_link string) (podcast_link string, err error) {
-	var podcastLinks []string
+func (c crawler) Find(podcast *entities.Podcast) error {
+	page_link := podcast.PageLink
 	if strings.Contains(page_link, "google") {
-		podcastLinks, err = getGooglePodcastLinks(page_link)
+		podcastLinks, err := getGooglePodcastLinks(page_link)
 		if err != nil {
-			return "", err
+			return err
 		}
-		return podcastLinks[0], nil
+		podcast.Mp3Link = podcastLinks[0]
+		return nil
 	}
 
 	if strings.Contains(page_link, "castbox") {
-		podcastLinks, err = getCastboxPodcastLinks(page_link)
+		podcastLinks, err := getCastboxPodcastLinks(page_link)
 		if err != nil {
-			return "", err
+			return err
 		}
-		return podcastLinks[0], nil
+		podcast.Mp3Link = podcastLinks[0]
+		return nil
 	}
 
-	return "nil", errors.New("unknown provider")
+	return errors.New("unknown provider")
 }
 
 // Find google podcast .mp3 link

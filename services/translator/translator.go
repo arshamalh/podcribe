@@ -1,8 +1,10 @@
 package translator
 
+import "podcribe/entities"
+
 type I interface {
 	// translate transcribed podcast line by line according to the predefined settings
-	Translate(string) (string, error)
+	Translate(podcast *entities.Podcast) error
 }
 
 type translator struct {
@@ -14,6 +16,6 @@ func New() *translator {
 	return &translator{}
 }
 
-func (t translator) Translate(text2translate string) (string, error) {
-	return "", nil
+func (t translator) Translate(podcast *entities.Podcast) error {
+	return nil
 }

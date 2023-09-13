@@ -39,24 +39,24 @@ func Process() func(ctx echo.Context) error {
 			})
 		}
 		if body.IsNoTranslation {
-			transcription, filepath, err := manager.FullExceptTranslation(body.Link)
+			podcast, err := manager.FullExceptTranslation(body.Link)
 			if err != nil {
 				return ctx.JSON(http.StatusBadRequest, err)
 			}
 			return ctx.JSON(http.StatusBadRequest, echo.Map{
-				"filepath":      filepath,
-				"transcription": transcription,
+				"filepath":      podcast.Mp3Path,
+				"transcription": podcast.TranscriptionPath,
 			})
 		}
 
-		translation, transcription, filepath, err := manager.FullFlow(body.Link)
+		podcast, err := manager.FullFlow(body.Link)
 		if err != nil {
 			return ctx.JSON(http.StatusBadRequest, err)
 		}
 		return ctx.JSON(http.StatusOK, echo.Map{
-			"translation":   translation,
-			"transcription": transcription,
-			"filepath":      filepath,
+			"translation":   podcast.TranslationPath,
+			"filepath":      podcast.Mp3Path,
+			"transcription": podcast.TranscriptionPath,
 		})
 	}
 }

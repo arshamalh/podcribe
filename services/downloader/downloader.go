@@ -9,9 +9,13 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"podcribe/entities"
+	"podcribe/log"
 	"strconv"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // TODO: Show the downloading progress in Telegram, UI, CLI or whatever is using this application
@@ -19,7 +23,7 @@ import (
 type I interface {
 	// Downloads a file, store it in the file system and returns the path to the file,
 	// or raise an error if it can't download the file or can't store it.
-	Download(url string) (filePath string, err error)
+	Download(podcast *entities.Podcast) error
 }
 
 type downloader struct {
@@ -41,11 +45,11 @@ func New(workers_count int) *downloader {
 	}
 }
 
-func (d *downloader) Download(uri string) (filePath string, err error) {
-	fmt.Println("uri	", uri)
-	isSupported, contentLength, err := getRangeDetails(uri)
+func (d *downloader) Download(podcast *entities.Podcast) error {
+	log.Info("downloading podcast", zap.String("uri", podcast.Mp3Link))
+	isSupported, contentLength, err := getRangeDetails(podcast.Mp3Link)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -54,16 +58,13 @@ func (d *downloader) Download(uri string) (filePath string, err error) {
 
 	if !isSupported || d.workersCount <= 1 {
 		fmt.Println("processing single")
-		return d.processSingle(uri)
+		podcast.Mp3Path, err = d.processSingle(podcast.Mp3Link)
+	} else {
+		podcast.Mp3Path, err = d.processMultiple(contentLength, podcast.Mp3Link)
 	}
 
-	filePath, err = d.processMultiple(contentLength, uri)
-	if err != nil {
-		return "", nil
-	}
-
-	fmt.Printf("Wrote to File : %v, len : %v\n", filePath, contentLength)
-	return filePath, nil
+	fmt.Printf("Wrote to File : %v, len : %v\n", podcast.Mp3Path, contentLength)
+	return err
 }
 
 func (d *downloader) ConsumeProgress() <-chan int {
