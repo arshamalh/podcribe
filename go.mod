@@ -49,5 +49,3 @@ require (
 	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-replace github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20230803082407-b94836195673 => ./whisper.cpp/bindings/go
