@@ -3,8 +3,6 @@ package transcriber
 import (
 	"os"
 
-	fpkg "path/filepath"
-
 	whispergo "github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 )
 
@@ -25,12 +23,23 @@ func (t transcriber) Transcribe(filepath string) (transcription string, err erro
 	// Load the model
 	model, err := whispergo.New(modelpath)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	defer model.Close()
 
-	flags, err := NewFlags(fpkg.Base(os.Args[0]), os.Args[1:])
-	Process(model, filepath, flags)
+	// TODO: will change hard-coded transcription.srt later
+	transcriptionpath := "transcription.srt"
+	transcription_file, err := os.OpenFile(transcriptionpath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return "", err
+	}
+	defer transcription_file.Close()
 
-	return "", nil
+	err = Process(model, filepath, os.Stdout, transcription_file)
+	if err != nil {
+		return "", err
+	}
+
+	return transcriptionpath, nil
+
 }
