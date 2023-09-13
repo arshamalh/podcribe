@@ -1,7 +1,7 @@
 FROM golang:1.20-bullseye as builder
 WORKDIR /app
 COPY go.mod go.sum ./
-RUN GOPROXY=https://goproxy.io,direct go mod download
+RUN go mod download
 RUN git clone https://github.com/ggerganov/whisper.cpp
 RUN cd whisper.cpp/bindings/go && make whisper
 RUN cd whisper.cpp && make base.en
