@@ -1,9 +1,10 @@
 package crawler
 
 import (
+	"database/sql"
 	"errors"
-	"podcribe/entities"
 	"github.com/gocolly/colly/v2"
+	"podcribe/entities"
 	"podcribe/repo"
 	"strings"
 )
@@ -17,34 +18,48 @@ type I interface {
 	Find(podcast *entities.Podcast) error
 }
 
-type crawler struct {
+type Crawler struct {
 	db repo.DB
 }
 
-func New(db repo.DB) *crawler {
-	return &crawler{db}
+func New(db repo.DB) *Crawler {
+	return &Crawler{db}
 }
 
 // Get a page link as an input and search in the page for a podcast link,
 // returns podcast link if any or raise an error if there is no link or the page is not accessible.
-func (c crawler) Find(podcast *entities.Podcast) error {
-	pageLink := podcast.PageLink
-	podcastLink, provider, err := getPodcastLink(pageLink)
+func (c Crawler) Find(podcast *entities.Podcast) error {
+	podcastModel1, err := c.db.GetPodcastByPageLink(podcast.PageLink)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			mp3Link, provider, err := getPodcastLink(podcast.PageLink)
+			if err != nil {
+				return err
+			}
+
+			podcastModel := podcast.Model(map[string]any{
+				"provider": provider,
+				"mp3_link": mp3Link,
+			})
+			err = c.db.StorePodcast(podcastModel)
+			if err != nil {
+				return err
+			}
+
+			podcast.Mp3Link = mp3Link
+
+			return nil
+		}
 		return err
 	}
 
-	//TODO: add provider and ToModel() method 
-	podcast.Mp3Link = podcastLink
-	podcastModel := repo.Podcast{
-		PageLink:    pageLink,
-		PodcastLink: podcastLink,
-		Provider:    provider,
+	err = c.db.IncreasePodcastReferencedCount(podcastModel1.Id)
+	if err != nil {
+		return err
 	}
+	podcast.Mp3Link = podcastModel1.Mp3Link
 
-	podcast.Mp3Link = podcastLink
-
-	return c.db.StorePodcast(podcastModel)
+	return nil
 }
 
 // Find podcast link

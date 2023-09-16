@@ -3,13 +3,16 @@ package repo
 import "time"
 
 type Podcast struct {
-	Id              int
-	PageLink        string
-	PodcastLink     string
-	Provider        string
-	Path            string
-	ReferencedCount int
-	CreatedAt       time.Time
+	Id                int
+	PageLink          string
+	Mp3Link           string
+	Provider          string
+	Mp3Path           string
+	WavPath           string
+	TranscriptionPath string
+	TranslationPath   string
+	ReferencedCount   int
+	CreatedAt         time.Time
 }
 
 type User struct {
@@ -24,5 +27,7 @@ type UserPodcast struct {
 }
 
 type DB interface {
-	StorePodcast(Podcast) error
+	StorePodcast(podcast Podcast) (err error)
+	GetPodcastByPageLink(pageLink string) (podcast Podcast, err error)
+	IncreasePodcastReferencedCount(podcastId int) (err error)
 }

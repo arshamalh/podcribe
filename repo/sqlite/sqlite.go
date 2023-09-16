@@ -5,6 +5,8 @@ import (
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"podcribe/repo"
+	"strconv"
+	"time"
 )
 
 // If the link was the same as database, don't download that again, using already downloaded files
@@ -51,17 +53,44 @@ func createTables(db *sql.DB) (err error) {
 }
 
 func (s *sqlite) StorePodcast(podcast repo.Podcast) (err error) {
-	stmt, err := s.DB.Prepare("INSERT INTO podcast(page_link, podcast_link, provider) VALUES (?, ?, ?)")
+	stmt, err := s.DB.Prepare("INSERT INTO podcast(page_link, podcast_link, provider, created_at) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(podcast.PageLink, podcast.PodcastLink, podcast.Provider)
+	result, err := stmt.Exec(podcast.PageLink, podcast.Mp3Link, podcast.Provider, time.Now())
 	if err != nil {
 		return err
 	}
 
-	fmt.Println("Inserted")
+	lastId, _ := result.LastInsertId()
+	fmt.Println("Inserted", strconv.FormatInt(lastId, 10))
+
+	return nil
+}
+
+func (s *sqlite) GetPodcastByPageLink(pageLink string) (podcast repo.Podcast, err error) {
+	err = s.DB.QueryRow("SELECT id, podcast_link, provider FROM podcast WHERE page_link=?", pageLink).Scan(&podcast.Id, &podcast.Mp3Link, &podcast.Provider)
+	if err != nil {
+		return podcast, err
+	}
+
+	return podcast, err
+}
+
+func (s *sqlite) IncreasePodcastReferencedCount(podcastId int) (err error) {
+	stmt, err := s.DB.Prepare("Update podcast  SET referenced_count = referenced_count + 1 WHERE id = ?")
+	if err != nil {
+		return err
+	}
+
+	result, err := stmt.Exec(podcastId)
+	if err != nil {
+		return err
+	}
+
+	row, _ := result.RowsAffected()
+	fmt.Println("Updated", strconv.FormatInt(row, 10))
 
 	return nil
 }

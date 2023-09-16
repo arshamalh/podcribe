@@ -6,6 +6,7 @@ import (
 	"path"
 	"podcribe/log"
 	"podcribe/manager"
+	"podcribe/repo/sqlite"
 	"podcribe/services/convertor"
 	"podcribe/services/crawler"
 	"podcribe/services/downloader"
@@ -33,8 +34,13 @@ func registerTranscribeCmd(root *cobra.Command) {
 }
 
 func transcribe(link string) {
+	db, err := sqlite.New()
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	manager := manager.New(
-		crawler.New(),
+		crawler.New(db),
 		downloader.New(3),
 		convertor.New(),
 		transcriber.New(),
