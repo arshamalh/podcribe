@@ -6,18 +6,22 @@ require (
 	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20230803082407-b94836195673
 	github.com/go-audio/wav v1.1.0
 	github.com/gocolly/colly/v2 v2.1.0
+	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/mattn/go-sqlite3 v1.14.17
 	github.com/spf13/cobra v1.7.0
 	github.com/u2takey/ffmpeg-go v0.4.1
 )
 
 require (
-	github.com/fatih/structs v1.1.0 // indirect
+	github.com/golang-migrate/migrate/v4 v4.16.2 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/labstack/gommon v0.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
