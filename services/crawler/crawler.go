@@ -29,99 +29,105 @@ func New(db repo.DB) *Crawler {
 // Get a page link as an input and search in the page for a podcast link,
 // returns podcast link if any or raise an error if there is no link or the page is not accessible.
 func (c Crawler) Find(podcast *entities.Podcast) error {
-	podcastModel1, err := c.db.GetPodcastByPageLink(podcast.PageLink)
+	// Check if the podcast already exists in the database
+	podcastModel, exist, err := c.isPodcastExist(podcast.PageLink)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			mp3Link, provider, err := getPodcastLink(podcast.PageLink)
-			if err != nil {
-				return err
-			}
-
-			podcastModel := podcast.Model(map[string]any{
-				"provider": provider,
-				"mp3_link": mp3Link,
-			})
-			err = c.db.StorePodcast(podcastModel)
-			if err != nil {
-				return err
-			}
-
-			podcast.Mp3Link = mp3Link
-
-			return nil
+		return err
+	}
+	if exist {
+		// Increase the referenced count and set the mp3 link
+		err = c.db.IncreasePodcastReferencedCount(podcastModel.Id)
+		if err != nil {
+			return err
 		}
-		return err
+		podcast.Mp3Link = podcastModel.Mp3Link
+		return nil
 	}
 
-	err = c.db.IncreasePodcastReferencedCount(podcastModel1.Id)
+	// Get the podcast mp3 link based on the provider
+	mp3Link, provider, err := getProviderMp3PodcastLink(podcast.PageLink)
 	if err != nil {
 		return err
 	}
-	podcast.Mp3Link = podcastModel1.Mp3Link
+
+	// Store the new podcast in the database
+	newPodcastModel := podcast.Model(map[string]any{
+		"provider": provider,
+		"mp3_link": mp3Link,
+	})
+	err = c.db.StorePodcast(newPodcastModel)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-// Find podcast link
-func getPodcastLink(page_link string) (podcastLink string, provider string, err error) {
-	var podcastLinks []string
-	if strings.Contains(page_link, GOOGLE) {
-		podcastLinks, err = getGooglePodcastLinks(page_link)
-		if err != nil {
-			return "", "", err
+func (c Crawler) isPodcastExist(PageLink string) (podcastModel repo.Podcast, exist bool, err error) {
+	podcastModel, err = c.db.GetPodcastByPageLink(PageLink)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return podcastModel, false, nil
 		}
-		return podcastLinks[0], GOOGLE, nil
+		return podcastModel, false, err
 	}
 
-	if strings.Contains(page_link, CASTBOX) {
-		podcastLinks, err = getCastboxPodcastLinks(page_link)
-		if err != nil {
-			return "", "", err
-		}
-		return podcastLinks[0], CASTBOX, nil
+	return podcastModel, true, nil
+}
+
+func getProviderMp3PodcastLink(pageLink string) (mp3Link, provider string, err error) {
+
+	if strings.Contains(pageLink, GOOGLE) {
+		return getGoogleMp3Links(pageLink)
+	}
+
+	if strings.Contains(pageLink, CASTBOX) {
+		return getCastboxMp3Links(pageLink)
 	}
 
 	return "", "", errors.New("unknown provider")
 }
 
 // Find google podcast .mp3 link
-func getGooglePodcastLinks(page_link string) (podcast_link []string, err error) {
+func getGoogleMp3Links(pageLink string) (podcastMp3Link, provider string, err error) {
 	cl := colly.NewCollector()
 
+	var podcastMp3Links []string
 	cl.OnHTML(`div[jsname="fvi9Ef"][jsdata]`, func(e *colly.HTMLElement) {
 		jsdata := e.Attr("jsdata")
 		httpIndex := strings.LastIndex(jsdata, "https")
 		mp3Index := strings.Index(jsdata, ".mp3")
 		if mp3Index > httpIndex {
-			podcast_link = append(podcast_link, jsdata[httpIndex:mp3Index+4])
+			podcastMp3Links = append(podcastMp3Links, jsdata[httpIndex:mp3Index+4])
 		}
 	})
 
-	err = cl.Visit(page_link)
+	err = cl.Visit(pageLink)
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 
-	return podcast_link, nil
+	return podcastMp3Links[0], GOOGLE, nil
 }
 
 // Find castbox .mp3 link
-func getCastboxPodcastLinks(page_link string) (podcast_link []string, err error) {
+func getCastboxMp3Links(pageLink string) (podcastMp3Link, provider string, err error) {
 	cl := colly.NewCollector()
 
+	var podcastMp3Links []string
 	cl.OnHTML(`#root > div > div:nth-child(1) > audio > source `, func(e *colly.HTMLElement) {
 		link := e.Attr("src")
 		httpIndex := strings.LastIndex(link, "https")
 		mp3Index := strings.Index(link, ".mp3")
 		if mp3Index > httpIndex {
-			podcast_link = append(podcast_link, link[httpIndex:mp3Index+4])
+			podcastMp3Links = append(podcastMp3Links, link[httpIndex:mp3Index+4])
 		}
 	})
 
-	err = cl.Visit(page_link)
+	err = cl.Visit(pageLink)
 	if err != nil {
-		return nil, err
+		return "", "", err
 	}
 
-	return podcast_link, nil
+	return podcastMp3Links[0], CASTBOX, nil
 }
