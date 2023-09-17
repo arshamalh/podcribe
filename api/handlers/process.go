@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"podcribe/api/requests"
 	"podcribe/manager"
+	"podcribe/repo/sqlite"
 	"podcribe/services/convertor"
 	"podcribe/services/crawler"
 	"podcribe/services/downloader"
@@ -22,10 +23,14 @@ func Process() func(ctx echo.Context) error {
 
 		// TODO: Make a websocket connection to show the progress
 		// using downloader.ConsumeProgress()
-		downloader := downloader.New(3)
+		db, err := sqlite.New()
+		if err != nil {
+			return ctx.JSON(http.StatusInternalServerError, err)
+		}
+		downloader := downloader.New(db, 3)
 
 		manager := manager.New(
-			crawler.New(), downloader, convertor.New(),
+			crawler.New(db), downloader, convertor.New(),
 			transcriber.New(), translator.New(),
 		)
 		if body.IsJustDownload {
