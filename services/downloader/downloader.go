@@ -3,6 +3,8 @@ package downloader
 import (
 	"bytes"
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +13,7 @@ import (
 	"path/filepath"
 	"podcribe/entities"
 	"podcribe/log"
+	"podcribe/repo"
 	"strconv"
 	"sync"
 	"time"
@@ -26,7 +29,8 @@ type I interface {
 	Download(podcast *entities.Podcast) error
 }
 
-type downloader struct {
+type Downloader struct {
+	db           repo.DB
 	workersCount int // TODO Calculate workers count dynamically and combine its logic with process single
 	chunks       []bytes.Buffer
 	progressChan chan int
@@ -37,15 +41,25 @@ type downloader struct {
 	// We can also have one manager per request and that kind of make sense
 }
 
-func New(workers_count int) *downloader {
-	return &downloader{
-		workersCount: workers_count,
-		chunks:       make([]bytes.Buffer, workers_count),
+func New(db repo.DB, workersCount int) *Downloader {
+	return &Downloader{
+		db:           db,
+		workersCount: workersCount,
+		chunks:       make([]bytes.Buffer, workersCount),
 		progressChan: make(chan int),
 	}
 }
 
-func (d *downloader) Download(podcast *entities.Podcast) error {
+func (d *Downloader) Download(podcast *entities.Podcast) error {
+	podcastModel, exist, err := d.isPodcastExist(podcast.PageLink)
+	if err != nil {
+		return err
+	}
+	if exist && len(podcastModel.Mp3Path) > 0 {
+		podcast.Mp3Path = podcastModel.Mp3Path
+		return nil
+	}
+
 	log.Info("downloading podcast", zap.String("uri", podcast.Mp3Link))
 	isSupported, contentLength, err := getRangeDetails(podcast.Mp3Link)
 	if err != nil {
@@ -63,15 +77,35 @@ func (d *downloader) Download(podcast *entities.Podcast) error {
 		podcast.Mp3Path, err = d.processMultiple(contentLength, podcast.Mp3Link)
 	}
 
-	fmt.Printf("Wrote to File : %v, len : %v\n", podcast.Mp3Path, contentLength)
+	PodcastModel := podcast.Model(map[string]any{
+		"id":       podcast.Id,
+		"mp3_path": podcast.Mp3Path,
+	})
+	err = d.db.UpdatePodcast(PodcastModel)
+	if err != nil {
+		return err
+	}
+
 	return err
 }
 
-func (d *downloader) ConsumeProgress() <-chan int {
+func (d *Downloader) isPodcastExist(PageLink string) (podcastModel repo.Podcast, exist bool, err error) {
+	podcastModel, err = d.db.GetPodcastByPageLink(PageLink)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return podcastModel, false, nil
+		}
+		return podcastModel, false, err
+	}
+
+	return podcastModel, true, nil
+}
+
+func (d *Downloader) ConsumeProgress() <-chan int {
 	return d.progressChan
 }
 
-func (d *downloader) processSingle(uri string) (filePath string, err error) {
+func (d *Downloader) processSingle(uri string) (filePath string, err error) {
 	d.chunks[0] = bytes.Buffer{}
 	d.downloadFileForRange(nil, uri, "", 0)
 
@@ -82,7 +116,7 @@ func (d *downloader) processSingle(uri string) (filePath string, err error) {
 	return d.combineChunks(uri)
 }
 
-func (d *downloader) processMultiple(contentLength int, uri string) (filePath string, err error) {
+func (d *Downloader) processMultiple(contentLength int, uri string) (filePath string, err error) {
 	partLength := contentLength / d.workersCount
 	var wg sync.WaitGroup
 	wg.Add(d.workersCount)
@@ -106,7 +140,7 @@ func (d *downloader) processMultiple(contentLength int, uri string) (filePath st
 	return d.combineChunks(uri)
 }
 
-func (d *downloader) downloadFileForRange(wg *sync.WaitGroup, uri, _range string, index int) {
+func (d *Downloader) downloadFileForRange(wg *sync.WaitGroup, uri, _range string, index int) {
 	defer wg.Done()
 	fmt.Printf("\nrange %s started", _range)
 	request, err := http.NewRequest("GET", uri, nil)
@@ -130,7 +164,7 @@ func (d *downloader) downloadFileForRange(wg *sync.WaitGroup, uri, _range string
 	fmt.Println(written, err)
 }
 
-func (d *downloader) combineChunks(uri string) (filePath string, err error) {
+func (d *Downloader) combineChunks(uri string) (filePath string, err error) {
 	currDir, err := os.Getwd()
 	if err != nil {
 		return "", err
@@ -152,7 +186,7 @@ func (d *downloader) combineChunks(uri string) (filePath string, err error) {
 	return filePath, nil
 }
 
-func (d *downloader) progress(ctx context.Context, totalLen int) {
+func (d *Downloader) progress(ctx context.Context, totalLen int) {
 	for {
 		select {
 		case <-ctx.Done():

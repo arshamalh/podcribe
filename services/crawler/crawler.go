@@ -40,6 +40,7 @@ func (c Crawler) Find(podcast *entities.Podcast) error {
 		if err != nil {
 			return err
 		}
+		podcast.Id = podcastModel.Id
 		podcast.Mp3Link = podcastModel.Mp3Link
 		return nil
 	}
@@ -59,6 +60,8 @@ func (c Crawler) Find(podcast *entities.Podcast) error {
 	if err != nil {
 		return err
 	}
+
+	podcast.Mp3Link = mp3Link
 
 	return nil
 }

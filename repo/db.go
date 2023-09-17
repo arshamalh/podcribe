@@ -30,4 +30,5 @@ type DB interface {
 	StorePodcast(podcast Podcast) (err error)
 	GetPodcastByPageLink(pageLink string) (podcast Podcast, err error)
 	IncreasePodcastReferencedCount(podcastId int) (err error)
+	UpdatePodcast(podcast Podcast) (err error)
 }

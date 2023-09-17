@@ -8,6 +8,7 @@ import (
 )
 
 type Podcast struct {
+	Id                int       `json:"id"`
 	Name              string    `json:"name"`
 	PageLink          string    `json:"page_link"`
 	Mp3Link           string    `json:"mp3_link"`

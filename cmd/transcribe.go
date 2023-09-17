@@ -41,7 +41,7 @@ func transcribe(link string) {
 
 	manager := manager.New(
 		crawler.New(db),
-		downloader.New(3),
+		downloader.New(db, 3),
 		convertor.New(),
 		transcriber.New(),
 		translator.New(),
@@ -50,7 +50,7 @@ func transcribe(link string) {
 	isOnWeb := strings.HasPrefix(link, "http://") || strings.HasPrefix(link, "https://")
 	if isOnWeb {
 		fmt.Println("started downloading:", link)
-		podcast, err := manager.FullFlow(link)
+		podcast, err := manager.JustDownload(link)
 
 		if err != nil {
 			fmt.Println(err)

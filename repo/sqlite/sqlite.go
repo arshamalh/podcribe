@@ -36,8 +36,6 @@ func New() (*sqlite, error) {
 		return nil, err
 	}
 
-	fmt.Println("create tables")
-
 	return &sqlite{DB: db}, nil
 }
 
@@ -87,7 +85,7 @@ func (s *sqlite) StorePodcast(podcast repo.Podcast) (err error) {
 }
 
 func (s *sqlite) GetPodcastByPageLink(pageLink string) (podcast repo.Podcast, err error) {
-	err = s.DB.QueryRow("SELECT id, mp3_link, provider FROM podcasts WHERE page_link=?", pageLink).Scan(&podcast.Id, &podcast.Mp3Link, &podcast.Provider)
+	err = s.DB.QueryRow("SELECT id, mp3_link, provider, mp3_path FROM podcasts WHERE page_link=?", pageLink).Scan(&podcast.Id, &podcast.Mp3Link, &podcast.Provider, &podcast.Mp3Path)
 	if err != nil {
 		return podcast, err
 	}
@@ -98,12 +96,29 @@ func (s *sqlite) GetPodcastByPageLink(pageLink string) (podcast repo.Podcast, er
 }
 
 func (s *sqlite) IncreasePodcastReferencedCount(podcastId int) (err error) {
-	stmt, err := s.DB.Prepare("Update podcasts  SET referenced_count = referenced_count + 1 WHERE id = ?")
+	stmt, err := s.DB.Prepare("Update podcasts SET referenced_count = referenced_count + 1 WHERE id = ?")
 	if err != nil {
 		return err
 	}
 
 	result, err := stmt.Exec(podcastId)
+	if err != nil {
+		return err
+	}
+
+	row, _ := result.RowsAffected()
+	fmt.Println("Updated", strconv.FormatInt(row, 10))
+
+	return nil
+}
+
+func (s *sqlite) UpdatePodcast(podcast repo.Podcast) (err error) {
+	stmt, err := s.DB.Prepare("Update podcasts SET mp3_path = ? WHERE id = ?")
+	if err != nil {
+		return err
+	}
+
+	result, err := stmt.Exec(podcast.Mp3Path, podcast.Id)
 	if err != nil {
 		return err
 	}
