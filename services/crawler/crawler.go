@@ -30,7 +30,7 @@ func New(db repo.DB) *Crawler {
 // returns podcast link if any or raise an error if there is no link or the page is not accessible.
 func (c Crawler) Find(podcast *entities.Podcast) error {
 	// Check if the podcast already exists in the database
-	podcastModel, exist, err := c.isPodcastExist(podcast.PageLink)
+	podcastModel, exist, err := c.doesPodcastExist(podcast.PageLink)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (c Crawler) Find(podcast *entities.Podcast) error {
 	return nil
 }
 
-func (c Crawler) isPodcastExist(PageLink string) (podcastModel repo.Podcast, exist bool, err error) {
+func (c Crawler) doesPodcastExist(PageLink string) (podcastModel repo.Podcast, exist bool, err error) {
 	podcastModel, err = c.db.GetPodcastByPageLink(PageLink)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
