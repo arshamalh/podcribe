@@ -23,7 +23,7 @@ func New() *transcriber {
 }
 
 func (t transcriber) Transcribe(podcast *entities.Podcast) error {
-	modelpath := "aimodels/ggml-base.en.bin" // Path to the model, TODO: read this value from settings.yaml
+	modelpath := "aimodels/ggml-base.en.bin" // Path to the model, TODO: read this value from cli
 
 	// Load the model
 	model, err := whispergo.New(modelpath)
