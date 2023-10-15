@@ -12,4 +12,4 @@ RUN make build
 FROM debian:bookworm-20210816
 COPY --from=builder /app/podcribe /bin/podcribe
 COPY --from=builder /app/whisper.cpp/models/ggml-base.en.bin aimodels/ggml-base.en.bin
-CMD ["podcribe", "start"]
+ENTRYPOINT [ "podcribe" ]

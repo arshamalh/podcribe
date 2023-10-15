@@ -52,3 +52,10 @@ The model will be generated as `ggml-base.en.bin` inside `whisper.cpp/models`, m
 
 For running docker with another manifest:
 docker build -t podcribe-test:0.0.9 -f Dockerfile.local .
+
+# Local development
+For local developments, clone and build whisper in the root directory and add
+```
+go mod edit -replace github.com/ggerganov/whisper.cpp/bindings/go=./whisper.cpp/bindings/go
+```
+to the end of your go.mod file.

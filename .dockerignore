@@ -1,3 +1,6 @@
 .vscode
-.files
+.github
+files
 readme.md
+aimodels
+whisper.cpp
