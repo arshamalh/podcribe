@@ -1,12 +1,14 @@
 package manager
 
 import (
+	"path"
 	"podcribe/entities"
 	"podcribe/services/convertor"
 	"podcribe/services/crawler"
 	"podcribe/services/downloader"
 	"podcribe/services/transcriber"
 	"podcribe/services/translator"
+	"strings"
 )
 
 // We may want to just download the podcast using the bot (no translating, convertion)
@@ -42,7 +44,7 @@ func (m Manager) JustDownload(link string) (*entities.Podcast, error) {
 }
 
 // Start a full or partial flow of steps the bot is cable of
-// it may just find and download the file and return the path or go down till translation
+// it may just find and download the file and return the filepath or go down till translation
 func (m Manager) FullFlow(link string) (*entities.Podcast, error) {
 	podcast := &entities.Podcast{
 		PageLink: link,
@@ -87,9 +89,12 @@ func (m Manager) FullExceptTranslation(link string) (*entities.Podcast, error) {
 	return podcast, m.transcriber.Transcribe(podcast)
 }
 
-func (m Manager) TranscribeDownloadedMP3(path string) (*entities.Podcast, error) {
+func (m Manager) TranscribeDownloadedMP3(filepath string) (*entities.Podcast, error) {
+	_, filename := path.Split(filepath)
+	filename, _ = strings.CutSuffix(filename, ".mp3")
 	podcast := &entities.Podcast{
-		Mp3Path: path,
+		Name:    filename,
+		Mp3Path: filepath,
 	}
 
 	if err := m.convertor.Convert(podcast); err != nil {
@@ -99,9 +104,9 @@ func (m Manager) TranscribeDownloadedMP3(path string) (*entities.Podcast, error)
 	return podcast, m.transcriber.Transcribe(podcast)
 }
 
-func (m Manager) TranslateDownloadedMP3(path string) (*entities.Podcast, error) {
+func (m Manager) TranslateDownloadedMP3(filepath string) (*entities.Podcast, error) {
 	podcast := &entities.Podcast{
-		Mp3Path: path,
+		Mp3Path: filepath,
 	}
 
 	if err := m.convertor.Convert(podcast); err != nil {
@@ -115,17 +120,17 @@ func (m Manager) TranslateDownloadedMP3(path string) (*entities.Podcast, error) 
 	return podcast, m.translator.Translate(podcast)
 }
 
-func (m Manager) TranscribeDownloadedWAV(path string) (*entities.Podcast, error) {
+func (m Manager) TranscribeDownloadedWAV(filepath string) (*entities.Podcast, error) {
 	podcast := &entities.Podcast{
-		WavPath: path,
+		WavPath: filepath,
 	}
 
 	return podcast, m.transcriber.Transcribe(podcast)
 }
 
-func (m Manager) TranslateDownloadedWAV(path string) (*entities.Podcast, error) {
+func (m Manager) TranslateDownloadedWAV(filepath string) (*entities.Podcast, error) {
 	podcast := &entities.Podcast{
-		WavPath: path,
+		WavPath: filepath,
 	}
 
 	if err := m.transcriber.Transcribe(podcast); err != nil {
