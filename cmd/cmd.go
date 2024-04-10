@@ -13,6 +13,7 @@ func Execute() {
 		Use:   "podcribe",
 		Short: "crawl, download, transcribe and translates podcasts",
 	}
+
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
 	registerStartCmd(root)

@@ -14,5 +14,14 @@ build-docker: # Build the docker image
 sample-docker: # Run docker with sample transcribe command
 	docker run --rm ${name}:${version} transcribe "http://google.com"
 
+sdr: # sample docker remote
+	docker run --rm -v ${PWD}/files:/files arshamalh/${name}:latest transcribe files/${file}
+
 sample-dev: # Run go run command
 	LIBRARY_PATH=${PWD}/whisper.cpp C_INCLUDE_PATH=${PWD}/whisper.cpp go run main.go transcribe "http://google.com"
+
+# These commands works but there is no need for the code in that case?
+# We expect to be consistent
+# cd whisper.cpp/bindings/go
+# ./build/go-whisper -model ../../../aimodels/ggml-base.en.bin "../../../files/01 Into You.wav"
+# 

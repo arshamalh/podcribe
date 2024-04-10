@@ -3,7 +3,7 @@ module podcribe
 go 1.20
 
 require (
-	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20230803082407-b94836195673
+	github.com/ggerganov/whisper.cpp/bindings/go v0.0.0-20240223072224-a0ddd8392c34
 	github.com/go-audio/wav v1.1.0
 	github.com/gocolly/colly/v2 v2.1.0
 	github.com/spf13/cobra v1.7.0
