@@ -1,10 +1,7 @@
 package transcriber
 
 import (
-	"os"
 	"podcribe/entities"
-
-	whispergo "github.com/ggerganov/whisper.cpp/bindings/go/pkg/whisper"
 )
 
 type I interface {
@@ -23,22 +20,5 @@ func New() *transcriber {
 }
 
 func (t transcriber) Transcribe(podcast *entities.Podcast) error {
-	modelpath := "aimodels/ggml-base.en.bin" // Path to the model, TODO: read this value from cli
-
-	// Load the model
-	model, err := whispergo.New(modelpath)
-	if err != nil {
-		return err
-	}
-	defer model.Close()
-
-	// TODO: will change hard-coded transcription.srt later
-	transcription_file, err := os.OpenFile(podcast.GetTranscriptionPath(t.rootStorage), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer transcription_file.Close()
-
-	return Process(model, podcast.WavPath, os.Stdout, transcription_file)
-
+	return nil
 }

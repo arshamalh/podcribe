@@ -1,8 +1,0 @@
-telegram-token: hjhjkfskdsa;kg
-ui-enabled: false
-
-settings:
-  - user: cli
-    flow-type: full-flow
-  - user: arshamalh
-    flow-type: full-flow

@@ -17,14 +17,14 @@ import (
 // Make a new manager for each user
 // Can hold its own settings too
 type Manager struct {
-	crawler     crawler.I
+	crawler     *crawler.CrawlHandler
 	downloader  downloader.I
 	convertor   convertor.I
 	transcriber transcriber.I
 	translator  translator.I
 }
 
-func New(crawler crawler.I, downloader downloader.I, convertor convertor.I, transcriber transcriber.I, translator translator.I) *Manager {
+func New(crawler *crawler.CrawlHandler, downloader downloader.I, convertor convertor.I, transcriber transcriber.I, translator translator.I) *Manager {
 	return &Manager{
 		crawler, downloader, convertor, transcriber, translator,
 	}
@@ -33,25 +33,30 @@ func New(crawler crawler.I, downloader downloader.I, convertor convertor.I, tran
 // the only difference is filtered providers
 // TODO: Should we include a direct download for this function?
 func (m Manager) JustDownload(link string) (*entities.Podcast, error) {
-	podcast := &entities.Podcast{
-		PageLink: link,
-	}
-
-	if err := m.crawler.Find(podcast); err != nil {
+	mp3Link, err := m.crawler.Find(link)
+	if err != nil {
 		return nil, err
 	}
+
+	podcast := &entities.Podcast{
+		PageLink: link,
+		Mp3Link:  mp3Link,
+	}
+
 	return podcast, m.downloader.Download(podcast)
 }
 
 // Start a full or partial flow of steps the bot is cable of
 // it may just find and download the file and return the filepath or go down till translation
 func (m Manager) FullFlow(link string) (*entities.Podcast, error) {
-	podcast := &entities.Podcast{
-		PageLink: link,
+	mp3Link, err := m.crawler.Find(link)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := m.crawler.Find(podcast); err != nil {
-		return nil, err
+	podcast := &entities.Podcast{
+		PageLink: link,
+		Mp3Link:  mp3Link,
 	}
 
 	if err := m.downloader.Download(podcast); err != nil {
@@ -70,12 +75,14 @@ func (m Manager) FullFlow(link string) (*entities.Podcast, error) {
 }
 
 func (m Manager) FullExceptTranslation(link string) (*entities.Podcast, error) {
-	podcast := &entities.Podcast{
-		PageLink: link,
+	mp3Link, err := m.crawler.Find(link)
+	if err != nil {
+		return nil, err
 	}
 
-	if err := m.crawler.Find(podcast); err != nil {
-		return nil, err
+	podcast := &entities.Podcast{
+		PageLink: link,
+		Mp3Link:  mp3Link,
 	}
 
 	if err := m.downloader.Download(podcast); err != nil {

@@ -16,8 +16,8 @@ func Execute() {
 
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	registerStartCmd(root)
-	registerTranscribeCmd(root)
+	registerStart(root)
+	registerTranscribe(root)
 
 	if err := root.Execute(); err != nil {
 		fmt.Println(err)

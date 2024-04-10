@@ -44,7 +44,7 @@ func New(workers_count int) *downloader {
 }
 
 func (d *downloader) Download(podcast *entities.Podcast) error {
-	log.Info("downloading podcast", zap.String("uri", podcast.Mp3Link))
+	log.Gl.Info("downloading podcast", zap.String("uri", podcast.Mp3Link))
 	isSupported, contentLength, err := getRangeDetails(podcast.Mp3Link)
 	if err != nil {
 		return err
