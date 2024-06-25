@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"context"
-	"os"
+	"podcribe/config"
 	"podcribe/log"
 	"podcribe/repo/sqlite"
 	"podcribe/session/ephemeral"
@@ -14,10 +14,10 @@ import (
 	"gopkg.in/telebot.v3"
 )
 
-func startTelegram(token string, wg *sync.WaitGroup) {
+func startTelegram(cfg config.Config, wg *sync.WaitGroup) {
 	defer wg.Done()
 	bot, err := telebot.NewBot(telebot.Settings{
-		Token:     token,
+		Token:     cfg.TelegramToken,
 		Poller:    &telebot.LongPoller{Timeout: 10 * time.Second},
 		ParseMode: telebot.ModeMarkdownV2,
 	})
@@ -27,10 +27,9 @@ func startTelegram(token string, wg *sync.WaitGroup) {
 
 	// TODO: Read config file in any exists
 
-	openAIToken := os.Getenv("OPENAI_TOKEN")
-	config := openai.DefaultConfig(openAIToken)
-	config.BaseURL = "https://api.gilas.io/v1"
-	openAIClient := openai.NewClientWithConfig(config)
+	openAIConfig := openai.DefaultConfig(cfg.OpenAIToken)
+	openAIConfig.BaseURL = cfg.OpenAIBase
+	openAIClient := openai.NewClientWithConfig(openAIConfig)
 
 	// TODO: If there was a redis configuration and that was connectable, connect!
 	// If there wasn't any, initialize an ephemeral session

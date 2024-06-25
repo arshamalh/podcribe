@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"os"
+	"podcribe/config"
 	"podcribe/log"
 	"sync"
 
@@ -10,10 +10,12 @@ import (
 )
 
 var (
-	token      string
-	server     bool
-	telegramOn bool
-	port       int
+	token       string
+	openAIToken string
+	openAIBase  string
+	server      bool
+	telegramOn  bool
+	port        int
 )
 
 func registerStart(root *cobra.Command) {
@@ -22,41 +24,43 @@ func registerStart(root *cobra.Command) {
 		Short: "starting telegram bot",
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Initialize()
-			start()
+			cfg := config.Setter().
+				SetTelegramToken(token).
+				SetOpenAIToken(openAIToken).
+				SetOpenAIBase(openAIBase).
+				Get()
+			start(cfg)
 		},
 	}
 
-	cmd.Flags().BoolVarP(&server, "server", "s", false, "this flag shows whether we should start a webserver or not")
-	cmd.Flags().StringVarP(&token, "token", "t", "", "input your telegram token") // TODO: Start telegram or webserver or both, in case of neither, throw an error
-	cmd.Flags().BoolVar(&telegramOn, "telegram-on", false, "whether the telegram should be on or not")
+	cmd.Flags().BoolVarP(&server, "server", "s", false, "whether we should start a webserver or not")
 	cmd.Flags().IntVarP(&port, "port", "p", 8080, "port for api server")
+
+	cmd.Flags().StringVarP(&token, "telegram-token", "t", "", "input your telegram token") // TODO: Start telegram or webserver or both, in case of neither, throw an error
+	cmd.Flags().BoolVar(&telegramOn, "telegram-on", false, "whether the telegram should be on or not")
+
+	cmd.Flags().StringVar(&openAIToken, "open-ai-token", "", "token for connecting to OpenAI")
+	cmd.Flags().StringVar(&openAIBase, "open-ai-base", "", "address of OpenAI or its proxy")
 	root.AddCommand(cmd)
 }
 
-func start() {
+func start(cfg config.Config) {
 	if err := godotenv.Load(); err != nil {
 		log.Gl.Error(err.Error())
 	}
 
-	if token == "" {
-		if os.Getenv("TELEGRAM_TOKEN") != "" {
-			token = os.Getenv("TELEGRAM_TOKEN")
-		} else if server {
-			// TODO: Start server is empty and redundant,
-			// but startAPI also seems to be in the wrong place,
-			// both of them should run in separate go-routines,
-			// And synchronized using wait groups
-		} else {
-			log.Gl.Fatal("no telegram token provided, no server setting provided, there is nothing to start")
-		}
+	if telegramOn && cfg.TelegramToken == "" {
+		log.Gl.Fatal("no telegram token provided, no server setting provided, there is nothing to start")
 	}
+
 	var wg sync.WaitGroup
 	if telegramOn {
 		wg.Add(1)
-		go startTelegram(token, &wg)
+		go startTelegram(cfg, &wg)
 	}
 	if server {
-		startAPI(port)
+		wg.Add(1)
+		go startAPI(port, &wg)
 	}
 	wg.Wait()
 }

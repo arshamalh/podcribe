@@ -1,5 +1,7 @@
 package cmd
 
-func startAPI(port int) {
+import "sync"
+
+func startAPI(port int, wg *sync.WaitGroup) {
 
 }
