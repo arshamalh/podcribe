@@ -20,9 +20,9 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Println(err.Error())
 	}
-	config.TelegramToken = os.Getenv("TELEGRAM_TOKEN")
-	config.OpenAIBase = os.Getenv("OPENAI_BASE")
-	config.OpenAIToken = os.Getenv("OPENAI_TOKEN")
+	config.SetTelegramToken(os.Getenv("TELEGRAM_TOKEN"))
+	config.SetOpenAIBase(os.Getenv("OPENAI_BASE"))
+	config.SetOpenAIToken(os.Getenv("OPENAI_TOKEN"))
 }
 
 func setDefaultValues() {
