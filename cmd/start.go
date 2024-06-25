@@ -39,8 +39,8 @@ func start() {
 	}
 
 	if token == "" {
-		if os.Getenv("TOKEN") != "" {
-			token = os.Getenv("TOKEN")
+		if os.Getenv("TELEGRAM_TOKEN") != "" {
+			token = os.Getenv("TELEGRAM_TOKEN")
 		} else if server {
 			// TODO: Start server is empty and redundant,
 			// but startAPI also seems to be in the wrong place,

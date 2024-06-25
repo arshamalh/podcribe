@@ -20,6 +20,9 @@ sdr: # sample docker remote
 sample-dev: # Run go run command
 	LIBRARY_PATH=${PWD}/whisper.cpp C_INCLUDE_PATH=${PWD}/whisper.cpp go run main.go transcribe "http://google.com"
 
+runtel:
+	go run main.go start --telegram-on
+
 # These commands works but there is no need for the code in that case?
 # We expect to be consistent
 # cd whisper.cpp/bindings/go

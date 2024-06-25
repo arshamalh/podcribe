@@ -12,7 +12,7 @@ func FmtWelcome(name string) string {
 	return response
 }
 
-// characters ()_-.=+ are reserved by telegram, so we should escape them.
+// characters ()_-.=+><! are reserved by telegram, so we should escape them.
 func FmtBasics(input string) string {
 	return strings.NewReplacer(
 		"(", "\\(",
@@ -22,6 +22,7 @@ func FmtBasics(input string) string {
 		"-", "\\-",
 		"=", "\\=",
 		">", "\\>",
+		"<", "\\<",
 		"+", "\\+",
 		"!", "\\!",
 	).Replace(input)

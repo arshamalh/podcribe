@@ -33,3 +33,12 @@ func (c convertor) Convert(podcast *entities.Podcast) error {
 	}
 	return nil
 }
+
+func (c convertor) ConvertOGGToMP3(oggPath string, mp3Path string) error {
+	if err := ffmpeg.Input(oggPath).Output(mp3Path).Run(); err != nil {
+		return err
+	}
+	// ffmpeg -i audio.ogg -acodec libmp3lame audio.mp3
+
+	return nil
+}

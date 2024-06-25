@@ -5,13 +5,15 @@ import (
 	"podcribe/session"
 	"podcribe/telegram/msgs"
 
+	"github.com/sashabaranov/go-openai"
 	"gopkg.in/telebot.v3"
 )
 
 type handler struct {
-	db      repo.DB
-	bot     *telebot.Bot
-	session session.TelegramSession
+	db           repo.DB
+	bot          *telebot.Bot
+	session      session.TelegramSession
+	openAIClient *openai.Client
 }
 
 func New(bot *telebot.Bot, db repo.DB, session session.TelegramSession) *handler {
@@ -20,6 +22,10 @@ func New(bot *telebot.Bot, db repo.DB, session session.TelegramSession) *handler
 		bot:     bot,
 		session: session,
 	}
+}
+
+func (h *handler) WithOpenAIClient(client *openai.Client) {
+	h.openAIClient = client
 }
 
 func (h *handler) Register() {
@@ -42,4 +48,7 @@ func (h *handler) Register() {
 
 	// Handle all the buttons
 	h.bot.Handle(telebot.OnCallback, cbsHandler.Handle)
+
+	h.bot.Handle(telebot.OnAudio, h.AudioHandler)
+	h.bot.Handle(telebot.OnVoice, h.VoiceHandler)
 }
