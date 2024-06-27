@@ -3,7 +3,6 @@ package msgs
 import "gopkg.in/telebot.v3"
 
 var (
-	NoCalculations      = NewCallbackResponse(NoCalculationsMsg)
 	NoHandlerHasBeenSet = NewCallbackResponse(NoHandlerHasBeenSetMsg)
 )
 

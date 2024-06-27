@@ -11,6 +11,7 @@ type Config struct {
 	TelegramToken string
 	OpenAIToken   string
 	OpenAIBase    string
+	AdminUsername string
 }
 
 var config = new(Config)
@@ -27,6 +28,7 @@ func init() {
 
 func setDefaultValues() {
 	config.OpenAIBase = "https://api.gilas.io/v1"
+	config.AdminUsername = "@arshamalh"
 }
 
 func Get() Config {
@@ -56,8 +58,4 @@ func (cfg *Config) SetOpenAIToken(token string) *Config {
 		cfg.OpenAIToken = token
 	}
 	return cfg
-}
-
-func (cfg *Config) Get() Config {
-	return *cfg
 }

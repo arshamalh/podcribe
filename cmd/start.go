@@ -24,11 +24,10 @@ func registerStart(root *cobra.Command) {
 		Short: "starting telegram bot",
 		Run: func(cmd *cobra.Command, args []string) {
 			log.Initialize()
-			cfg := config.Setter().
+			cfg := *config.Setter().
 				SetTelegramToken(token).
 				SetOpenAIToken(openAIToken).
-				SetOpenAIBase(openAIBase).
-				Get()
+				SetOpenAIBase(openAIBase)
 			start(cfg)
 		},
 	}

@@ -14,7 +14,7 @@ func (s *sqlite) AddUser(ctx context.Context, user *entities.User) error {
 		return err
 	}
 
-	log.Gl.Info("new user created:", zap.Uint("ID", user.ID), zap.Int64("chatID", user.ChatID))
+	log.Gl.Info("new user created:", zap.Int64("ID", user.ID), zap.Int64("chatID", user.ChatID))
 	return nil
 }
 

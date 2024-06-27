@@ -63,7 +63,7 @@ func (m Manager) FullFlow(link string) (*entities.Podcast, error) {
 		return nil, err
 	}
 
-	if err := m.convertor.Convert(podcast); err != nil {
+	if err := m.convertor.ConvertMP3ToWAV(podcast); err != nil {
 		return nil, err
 	}
 
@@ -89,7 +89,7 @@ func (m Manager) FullExceptTranslation(link string) (*entities.Podcast, error) {
 		return nil, err
 	}
 
-	if err := m.convertor.Convert(podcast); err != nil {
+	if err := m.convertor.ConvertMP3ToWAV(podcast); err != nil {
 		return nil, err
 	}
 
@@ -104,7 +104,7 @@ func (m Manager) TranscribeDownloadedMP3(filepath string) (*entities.Podcast, er
 		Mp3Path: filepath,
 	}
 
-	if err := m.convertor.Convert(podcast); err != nil {
+	if err := m.convertor.ConvertMP3ToWAV(podcast); err != nil {
 		return nil, err
 	}
 
@@ -116,7 +116,7 @@ func (m Manager) TranslateDownloadedMP3(filepath string) (*entities.Podcast, err
 		Mp3Path: filepath,
 	}
 
-	if err := m.convertor.Convert(podcast); err != nil {
+	if err := m.convertor.ConvertMP3ToWAV(podcast); err != nil {
 		return nil, err
 	}
 

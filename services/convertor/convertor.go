@@ -9,7 +9,7 @@ import (
 
 type I interface {
 	// Convert a file format to another and returns the new path or raise an error
-	Convert(podcast *entities.Podcast) error
+	ConvertMP3ToWAV(podcast *entities.Podcast) error
 }
 
 type convertor struct {
@@ -22,7 +22,7 @@ func New() *convertor {
 // Convert turns mp3 file to wav file
 // Default command is:
 // ffmpeg -i input.mp3 -ar 16000 -ac 1 -c:a pcm_s16le output.wav
-func (c convertor) Convert(podcast *entities.Podcast) error {
+func (c convertor) ConvertMP3ToWAV(podcast *entities.Podcast) error {
 	// TODO: "" wav path should not be hard-coded
 	return ffmpeg.Input(podcast.Mp3Path).Output(podcast.GetWavPath(""),
 		ffmpeg.KwArgs{

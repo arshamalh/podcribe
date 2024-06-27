@@ -7,13 +7,18 @@ import (
 )
 
 type User struct {
-	ID          uint      `bun:",pk,autoincrement"`
-	ChatID      int64     `bun:",unique"`
-	Password    []byte    `json:"-"`
-	Email       string    `bun:",unique" json:"email"`
-	PhoneNumber string    `bun:",unique" json:"phone"`
+	ID          int64  `bun:",pk,autoincrement"`
+	ChatID      int64  `bun:",unique"`
+	Password    []byte `json:"-"`
+	Email       string `bun:",unique" json:"email"`
+	PhoneNumber string `bun:",unique" json:"phone"`
+	TFName      string
+	TLName      string
 	CreatedAt   time.Time `bun:",default:current_timestamp"`
 	UpdatedAt   time.Time `bun:",default:current_timestamp"`
+	Charges     []Charge  `bun:"rel:has-many,join:id=user_id"`
+	Audios      []Audio   `bun:"rel:has-many,join:id=user_id"`
+	Invoices    []Invoice `bun:"rel:has-many,join:id=user_id"`
 }
 
 func (user *User) SetPassword(password string) {
