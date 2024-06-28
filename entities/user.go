@@ -10,8 +10,8 @@ type User struct {
 	ID          int64  `bun:",pk,autoincrement"`
 	ChatID      int64  `bun:",unique"`
 	Password    []byte `json:"-"`
-	Email       string `bun:",unique" json:"email"`
-	PhoneNumber string `bun:",unique" json:"phone"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone"`
 	TFName      string
 	TLName      string
 	Balance     float64
