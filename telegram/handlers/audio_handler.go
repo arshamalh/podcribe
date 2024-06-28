@@ -2,9 +2,12 @@ package handlers
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"podcribe/config"
 	"podcribe/log"
 	"podcribe/telegram/msgs"
+	"podcribe/tools"
+	"slices"
 
 	"github.com/sashabaranov/go-openai"
 	"go.uber.org/zap"
@@ -17,20 +20,29 @@ func (h *handler) AudioHandler(ctx telebot.Context) error {
 	err := h.bot.Download(audio.MediaFile(), audio.FileName)
 	if err != nil {
 		log.Gl.Error(err.Error())
-		return ctx.Send("can't download file from telegram, isn't it less than 20 MB?")
+		return ctx.Send(msgs.CantDownloadFile)
 	}
 	log.Gl.Info("some voice received", zap.String("name", audio.FileName))
 
+	// TODO: IMPORTANT: Add some validations for the received audio,
+	//   is it the right length? is the length shorter than remaining balance?
+
+	if !slices.Contains(tools.SupportedFormats, audio.MIME) {
+		return ctx.Send(msgs.FileTypeNotSupported + config.Get().AdminUsername)
+	}
+
 	// // *** Audio stuff *** //
+	// TODO: contribute to openai by making NewAudioRequest function which can be a builder pattern and limit user inputs
 	req := openai.AudioRequest{
 		Model:    openai.Whisper1,
 		FilePath: audio.FileName,
 	}
+
 	resp, err := h.openAIClient.CreateTranscription(context.Background(), req)
 	if err != nil {
-		fmt.Printf("Transcription error: %v\n", err)
-		return ctx.Send("something unexpected happened when transcribing")
+		log.Gl.Error(errors.Join(err).Error())
+		return ctx.Send(msgs.CantTranscribe)
 	}
-	fmt.Println(resp.Text)
+
 	return ctx.Send(msgs.FmtBasics(resp.Text))
 }

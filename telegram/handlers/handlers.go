@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"podcribe/repo"
+	"podcribe/repo/sqlite"
 	"podcribe/session"
 	"podcribe/telegram/msgs"
 
@@ -10,13 +10,13 @@ import (
 )
 
 type handler struct {
-	db           repo.DB
+	db           *sqlite.Sqlite
 	bot          *telebot.Bot
 	session      session.TelegramSession
 	openAIClient *openai.Client
 }
 
-func New(bot *telebot.Bot, db repo.DB, session session.TelegramSession) *handler {
+func New(bot *telebot.Bot, db *sqlite.Sqlite, session session.TelegramSession) *handler {
 	return &handler{
 		db:      db,
 		bot:     bot,

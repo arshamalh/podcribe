@@ -29,7 +29,8 @@ func (h *handler) Start(ctx SharedContext) error {
 	if err := h.db.AddUser(context.TODO(), user); err != nil {
 		// User doesn't exist neither created! seek up the problem
 		log.Gl.Error(err.Error())
-		return ctx.Send("your account can't be created! message the admin: " + config.Get().AdminUsername)
+		message := "your account can't be created! message the admin: " + config.Get().AdminUsername
+		return ctx.Send(msgs.FmtBasics(message))
 	}
 
 	return ctx.Send(

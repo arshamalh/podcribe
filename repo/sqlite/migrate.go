@@ -6,11 +6,11 @@ import (
 	"podcribe/log"
 )
 
-func (s sqlite) Migrate(ctx context.Context) {
+func (s Sqlite) Migrate(ctx context.Context) {
 	s.CreateTablesIfNotExists(ctx)
 }
 
-func (s sqlite) CreateTablesIfNotExists(ctx context.Context) {
+func (s Sqlite) CreateTablesIfNotExists(ctx context.Context) {
 	if _, err := s.db.NewCreateTable().
 		Model(new(entities.User)).
 		IfNotExists().

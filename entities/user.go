@@ -14,6 +14,7 @@ type User struct {
 	PhoneNumber string `bun:",unique" json:"phone"`
 	TFName      string
 	TLName      string
+	Balance     float64
 	CreatedAt   time.Time `bun:",default:current_timestamp"`
 	UpdatedAt   time.Time `bun:",default:current_timestamp"`
 	Charges     []Charge  `bun:"rel:has-many,join:id=user_id"`

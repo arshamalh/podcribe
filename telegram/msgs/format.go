@@ -9,7 +9,7 @@ func FmtWelcome(name string) string {
 	response := strings.NewReplacer(
 		"{name}", name,
 	).Replace(WelcomeMessage)
-	return response
+	return FmtBasics(response)
 }
 
 // characters ()_-.=+><! are reserved by telegram, so we should escape them.

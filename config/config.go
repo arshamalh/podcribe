@@ -12,6 +12,7 @@ type Config struct {
 	OpenAIToken   string
 	OpenAIBase    string
 	AdminUsername string
+	InvoiceFactor float64
 }
 
 var config = new(Config)
@@ -29,6 +30,7 @@ func init() {
 func setDefaultValues() {
 	config.OpenAIBase = "https://api.gilas.io/v1"
 	config.AdminUsername = "@arshamalh"
+	config.InvoiceFactor = 0.001 // 1/1000 $ per second
 }
 
 func Get() Config {
