@@ -5,6 +5,7 @@ import (
 	"podcribe/config"
 	"podcribe/entities"
 	"podcribe/log"
+	"podcribe/telegram/keyboards"
 	"podcribe/telegram/msgs"
 
 	"gopkg.in/telebot.v3"
@@ -17,6 +18,7 @@ func (h *handler) Start(ctx SharedContext) error {
 	if user != nil && err == nil {
 		return ctx.Send(
 			msgs.FmtWelcome(user.TFName),
+			keyboards.Main(),
 		)
 	}
 
@@ -30,11 +32,12 @@ func (h *handler) Start(ctx SharedContext) error {
 		// User doesn't exist neither created! seek up the problem
 		log.Gl.Error(err.Error())
 		message := "your account can't be created! message the admin: " + config.Get().AdminUsername
-		return ctx.Send(msgs.FmtBasics(message))
+		return ctx.Send(msgs.FmtBasics(message), keyboards.Main())
 	}
 
 	return ctx.Send(
 		msgs.FmtWelcome(user.TFName),
+		keyboards.Main(),
 	)
 }
 

@@ -32,4 +32,6 @@ func (bk BtnKey) AsRow(text string, data ...string) telebot.Row {
 
 const (
 	AddCalculation BtnKey = "calcAdd"
+	ChargesList    BtnKey = "chgL"
+	CancelInline   BtnKey = "c"
 )

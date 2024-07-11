@@ -5,3 +5,6 @@ aimodels
 whisper.cpp
 *.srt
 .env
+*.json
+samples.go
+*.db

@@ -18,10 +18,16 @@ func (rb ReplyBtn) Build() telebot.Btn {
 	}
 }
 
-func (rb ReplyBtn) AsRow(text string) telebot.Row {
+func (rb ReplyBtn) AsRow() telebot.Row {
 	return telebot.Row{rb.Build()}
 }
 
 const (
-	Cancel ReplyBtn = ReplyBtn(msgs.Cancel)
+	Credit         ReplyBtn = ReplyBtn(msgs.Credit)
+	Cancel         ReplyBtn = ReplyBtn(msgs.Cancel)
+	ReferFriends   ReplyBtn = ReplyBtn(msgs.ReferFriends)
+	BotLanguage    ReplyBtn = ReplyBtn(msgs.BotLanguage)
+	VoicesLanguage ReplyBtn = ReplyBtn(msgs.VoicesLanguage)
+	AboutUs        ReplyBtn = ReplyBtn(msgs.AboutUs)
+	VoicesList     ReplyBtn = ReplyBtn(msgs.VoicesList)
 )

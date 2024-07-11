@@ -3,10 +3,7 @@ package entities
 type Scene int
 
 const (
-	SceneAddCalculation Scene = iota + 1
-	SceneAddBill
-	SceneAddDebt
-	SceneAddComplexBill
+	SceneCredit Scene = iota + 1
 )
 
 type Question int

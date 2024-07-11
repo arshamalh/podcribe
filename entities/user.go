@@ -7,19 +7,20 @@ import (
 )
 
 type User struct {
-	ID          int64  `bun:",pk,autoincrement"`
-	ChatID      int64  `bun:",unique"`
-	Password    []byte `json:"-"`
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone"`
-	TFName      string
-	TLName      string
-	Balance     float64
-	CreatedAt   time.Time `bun:",default:current_timestamp"`
-	UpdatedAt   time.Time `bun:",default:current_timestamp"`
-	Charges     []Charge  `bun:"rel:has-many,join:id=user_id"`
-	Audios      []Audio   `bun:"rel:has-many,join:id=user_id"`
-	Invoices    []Invoice `bun:"rel:has-many,join:id=user_id"`
+	ID            int64  `bun:",pk,autoincrement"`
+	ChatID        int64  `bun:",unique"` // TODO: IMPORTANT: Separate Telegram specific fields especially Chat id to a different table
+	Password      []byte `json:"-"`
+	Email         string `json:"email"`
+	PhoneNumber   string `json:"phone"`
+	TFName        string
+	TLName        string
+	Balance       float64
+	CreatedAt     time.Time      `bun:",default:current_timestamp"`
+	UpdatedAt     time.Time      `bun:",default:current_timestamp"`
+	TIRTCharges   []TIRTCharge   `bun:"rel:has-many,join:id=user_id"`
+	CryptoCharges []CryptoCharge `bun:"rel:has-many,join:id=user_id"`
+	Audios        []Audio        `bun:"rel:has-many,join:id=user_id"`
+	Invoices      []Invoice      `bun:"rel:has-many,join:id=user_id"`
 }
 
 func (user *User) SetPassword(password string) {
