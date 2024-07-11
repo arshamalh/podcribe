@@ -12,11 +12,11 @@ import (
 	bunDebug "github.com/uptrace/bun/extra/bundebug"
 )
 
-type sqlite struct {
+type Sqlite struct {
 	db *bun.DB
 }
 
-func New(path string) (*sqlite, error) {
+func New(path string) (*Sqlite, error) {
 	sqlDB, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func New(path string) (*sqlite, error) {
 		bunDebug.FromEnv("DEBUG"),
 	))
 
-	return &sqlite{
+	return &Sqlite{
 		db: db,
 	}, nil
 }

@@ -5,6 +5,8 @@ import (
 	"podcribe/config"
 	"podcribe/log"
 	"podcribe/repo/sqlite"
+	"podcribe/services/ton"
+	"podcribe/services/tron"
 	"podcribe/session/ephemeral"
 	"podcribe/telegram/handlers"
 	"sync"
@@ -40,8 +42,15 @@ func startTelegram(cfg config.Config, wg *sync.WaitGroup) {
 		log.Gl.Fatal("unable to initialize db")
 	}
 	db.Migrate(context.TODO())
-	handler := handlers.New(bot, db, session)
-	handler.WithOpenAIClient(openAIClient)
+
+	ton := ton.New(cfg.TON_BASE, cfg.TON_APIKey)
+	tron := tron.New(cfg.TRON_BASE, cfg.TRON_APIKey)
+
+	handler := handlers.New(bot, db, session).
+		WithOpenAIClient(openAIClient).
+		WithTON(ton).
+		WithTRON(tron)
+
 	handler.Register()
 	log.Gl.Info("Starting telegram bot")
 	bot.Start()

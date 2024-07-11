@@ -3,22 +3,34 @@ package msgs
 // Messages
 const (
 	WelcomeMessage = `
-درود {name}, 
-به ربات دنگی خوش اومدی,
-این ربات بهت کمک میکنه که حساب کتاب هاتون رو با دوستات راحت تر محاسبه کنی
-میتونی یه حساب کتاب جدید اضافه کنی
+Welcome to our bot, you can simply send a voice message, 
+or an audio message, we will transcribe it!
 `
 
-	MainMenu = `
-به منوی اصلی برگشتی،
-از اینجا میتونی حساب کتاب جدید اضافه کنی یا لیست حساب کتاب های قبلی ات رو ببینی
-`
+	NoHandlerHasBeenSetMsg = `No handlers has been set`
 
-	NoCalculationsMsg      = `هیچ حساب و کتابی موجود نیست!`
-	NoHandlerHasBeenSetMsg = `هیچ کنترل کننده ای برای این دکمه تنظیم نشده`
+	CreditMsg = `
+Your current balance is: {balance} $
+We currently support crypto payments through TON, Tron, and USDT (trc20),
+Send any amount you want to charge to one of these wallets:
+TON address: ''{ton}''
+Tron address: ''{tron}''
+USDT (trc20): ''{usdt}''
+Then send your transaction ID for us.
+`
 )
 
 // Buttons text
 const (
-	Cancel string = "انصراف 🚫"
+	// Reply
+	Cancel         string = "Cancel 🚫"
+	Credit         string = "Credit 💰"
+	ReferFriends   string = "Refer Friends 💌"
+	BotLanguage    string = "Bot Language 🇺🇸" // TODO: show the right flag when the language is not English
+	VoicesLanguage string = "Voices Language 🇺🇸"
+	AboutUs        string = "About Us 🔮"
+	VoicesList     string = "Voices List 📄"
+
+	// Inline
+	ChargesList string = "Transactions List 📊"
 )
